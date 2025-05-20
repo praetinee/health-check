@@ -35,88 +35,104 @@ df['HN'] = df['HN'].astype(str)
 df['ชื่อ-สกุล'] = df['ชื่อ-สกุล'].astype(str)
 
 # ===============================
-# HEADER
+# SEARCH UI
 # ===============================
-st.markdown("""
-<h1 style='text-align:center;'>ระบบรายงานผลตรวจสุขภาพ</h1>
-<h4 style='text-align:center; color:gray;'>- กลุ่มงานอาชีวเวชกรรม รพ.สันทราย -</h4>
-""", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;'>ระบบรายงานผลตรวจสุขภาพ</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align:center; color:gray;'>- กลุ่มงานอาชีวเวชกรรม รพ.สันทราย -</h4>", unsafe_allow_html=True)
 
-# ===============================
-# SEARCH FORM
-# ===============================
-with st.form("search_form", clear_on_submit=False):
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        citizen_id = st.text_input("เลขบัตรประชาชน", placeholder="เช่น 1234567890123", key="cid")
-    with col2:
-        hn = st.text_input("HN", placeholder="เช่น 123456", key="hn")
-    with col3:
-        full_name = st.text_input("ชื่อ-สกุล", placeholder="เช่น สมชาย ใจดี", key="fname")
+col1, col2, col3 = st.columns(3)
+with col1:
+    citizen_id = st.text_input("เลขบัตรประชาชน", max_chars=13, placeholder="เช่น 1234567890123")
+with col2:
+    hn = st.text_input("HN", placeholder="เช่น 123456")
+with col3:
+    full_name = st.text_input("ชื่อ-สกุล", placeholder="เช่น สมชาย ใจดี")
 
-    submitted = st.form_submit_button("ตรวจสอบ")
-
-if submitted:
-    result = pd.DataFrame()
-    if citizen_id.strip():
-        result = df[df['เลขบัตรประชาชน'] == citizen_id.strip()]
-    elif hn.strip():
-        result = df[df['HN'] == hn.strip()]
-    elif full_name.strip():
-        result = df[df['ชื่อ-สกุล'].str.strip() == full_name.strip()]
-
-    if result.empty:
-        st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
+if st.button("ตรวจสอบ"):
+    if not (citizen_id.strip() or hn.strip() or full_name.strip()):
+        st.warning("⚠️ กรุณากรอกอย่างน้อยหนึ่งช่องเพื่อค้นหา")
     else:
-        person = result.iloc[0]
-        st.success(f"✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}")
-        st.markdown(f"**HN:** {person.get('HN', '-')}  ")
-        st.markdown(f"**เลขบัตรประชาชน:** {person.get('เลขบัตรประชาชน', '-')}  ")
-        st.markdown(f"**เพศ:** {person.get('เพศ', '-')}  ")
-        st.dataframe(person.to_frame().T, use_container_width=True)
+        matched = df[
+            (df['เลขบัตรประชาชน'] == citizen_id.strip()) |
+            (df['HN'] == hn.strip()) |
+            (df['ชื่อ-สกุล'].str.strip() == full_name.strip())
+        ]
 
-# ===============================
-# ส่วนแสดงผลสุขภาพตามปีที่เลือก
-# ===============================
+        if matched.empty:
+            st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
+        else:
+            person = matched.iloc[0]
+            st.success(f"✅ พบข้อมูลของ {person.get('ชื่อ-สกุล', '-')}")
+            st.markdown(f"**HN:** {person.get('HN', '-')}  ")
+            st.markdown(f"**เลขบัตรประชาชน:** {person.get('เลขบัตรประชาชน', '-')}")
+            st.markdown(f"**เพศ:** {person.get('เพศ', '-')}")
 
-st.markdown("### 📅 เลือกปี พ.ศ. ที่ต้องการดูผลสุขภาพ")
-selected_year_display = st.selectbox("เลือกปี", [f"พ.ศ. 25{y}" for y in range(61, 69)])
-selected_year = selected_year_display[-2:]  # ดึงเลขปี เช่น '68'
+            # ===============================
+            # HEALTH SECTION - SELECT YEAR
+            # ===============================
+            st.markdown("### 🗓️ เลือกปี พ.ศ. ที่ต้องการดูผลสุขภาพ")
+            selected_year_display = st.selectbox("เลือกปี", [f"พ.ศ. 25{y}" for y in range(61, 69)])
+            selected_year = selected_year_display[-2:]
 
-# ดึงข้อมูลจากปีที่เลือก
-def get_value(field_prefix):
-    return person.get(f"{field_prefix}{selected_year}", "-")
+            def calc_bmi(w, h):
+                try:
+                    return round(float(w) / ((float(h)/100)**2), 1)
+                except:
+                    return None
 
-weight = get_value("น้ำหนัก")
-height = get_value("ส่วนสูง")
-waist = get_value("รอบเอว")
-sbp = get_value("SBP")
-dbp = get_value("DBP")
-pulse = get_value("pulse")
+            def interpret_bmi(bmi):
+                if bmi is None: return None
+                if bmi > 30: return "อ้วนมาก"
+                elif bmi >= 25: return "อ้วน"
+                elif bmi >= 23: return "น้ำหนักเกิน"
+                elif bmi >= 18.5: return "ปกติ"
+                else: return "ผอม"
 
-# คำนวณ BMI
-bmi_value = calc_bmi(weight, height)
-bmi_text = f"{bmi_value:.1f}" if bmi_value else "-"
-bmi_result = interpret_bmi(bmi_value)
+            def interpret_bp(sbp, dbp):
+                try:
+                    sbp = float(sbp)
+                    dbp = float(dbp)
+                    if sbp == 0 or dbp == 0: return None
+                    if sbp >= 160 or dbp >= 100: return "ความดันโลหิตสูง"
+                    elif sbp >= 140 or dbp >= 90: return "ความดันโลหิตสูงเล็กน้อย"
+                    elif sbp < 120 and dbp < 80: return "ความดันโลหิตปกติ"
+                    else: return "ความดันโลหิตปกติค่อนข้างสูง"
+                except:
+                    return None
 
-# แปลผลความดัน
-bp_text = f"{sbp}/{dbp}" if sbp != "-" and dbp != "-" else "-"
-bp_result = interpret_bp(sbp, dbp)
+            def assess_waist(waist):
+                try:
+                    return "รอบเอวเกินเกณฑ์" if float(waist) > 90 else "รอบเอวปกติ"
+                except:
+                    return None
 
-# ประเมินรอบเอว (เกณฑ์ 90 cm เป็นค่า default)
-waist_result = assess_waist(waist)
+            def get_value(field):
+                return person.get(f"{field}{selected_year}", "-")
 
-# แสดงผลลัพธ์
-st.markdown("### 🧍‍♂️ ข้อมูลทั่วไป (เฉพาะปีที่เลือก)")
-data_summary = pd.DataFrame({
-    "น้ำหนัก (กก.)": [weight],
-    "ส่วนสูง (ซม.)": [height],
-    "รอบเอว (ซม.)": [waist],
-    "BMI": [bmi_text],
-    "แปลผล BMI": [bmi_result or "-"],
-    "ค่าความดัน (mmHg)": [bp_text],
-    "แปลผลความดัน": [bp_result or "-"],
-    "แปลผลรอบเอว": [waist_result or "-"],
-    "ชีพจร (bpm)": [pulse]
-})
-st.dataframe(data_summary.T.rename(columns={0: selected_year_display}), use_container_width=True)
+            weight = get_value("น้ำหนัก")
+            height = get_value("ส่วนสูง")
+            waist = get_value("รอบเอว")
+            sbp = get_value("SBP")
+            dbp = get_value("DBP")
+            pulse = get_value("pulse")
+
+            bmi = calc_bmi(weight, height)
+            bmi_text = f"{bmi:.1f}" if bmi else "-"
+            bmi_result = interpret_bmi(bmi)
+            bp_text = f"{sbp}/{dbp}" if sbp != "-" and dbp != "-" else "-"
+            bp_result = interpret_bp(sbp, dbp)
+            waist_result = assess_waist(waist)
+
+            st.markdown("### 🡉 ข้อมูลทั่วไป (เฉพาะปีที่เลือก)")
+            data_summary = pd.DataFrame({
+                "น้ำหนัก (กก.)": [weight],
+                "ส่วนสูง (ซม.)": [height],
+                "รอบเอว (ซม.)": [waist],
+                "BMI": [bmi_text],
+                "แปลผล BMI": [bmi_result or "-"],
+                "ค่าความดัน (mmHg)": [bp_text],
+                "แปลผลความดัน": [bp_result or "-"],
+                "แปลผลรอบเอว": [waist_result or "-"],
+                "ชีพจร (bpm)": [pulse]
+            })
+            st.dataframe(data_summary.T.rename(columns={0: selected_year_display}), use_container_width=True)
