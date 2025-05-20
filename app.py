@@ -74,3 +74,49 @@ if submitted:
         st.markdown(f"**เลขบัตรประชาชน:** {person.get('เลขบัตรประชาชน', '-')}  ")
         st.markdown(f"**เพศ:** {person.get('เพศ', '-')}  ")
         st.dataframe(person.to_frame().T, use_container_width=True)
+
+# ===============================
+# ส่วนแสดงผลสุขภาพตามปีที่เลือก
+# ===============================
+
+st.markdown("### 📅 เลือกปี พ.ศ. ที่ต้องการดูผลสุขภาพ")
+selected_year_display = st.selectbox("เลือกปี", [f"พ.ศ. 25{y}" for y in range(61, 69)])
+selected_year = selected_year_display[-2:]  # ดึงเลขปี เช่น '68'
+
+# ดึงข้อมูลจากปีที่เลือก
+def get_value(field_prefix):
+    return person.get(f"{field_prefix}{selected_year}", "-")
+
+weight = get_value("น้ำหนัก")
+height = get_value("ส่วนสูง")
+waist = get_value("รอบเอว")
+sbp = get_value("SBP")
+dbp = get_value("DBP")
+pulse = get_value("pulse")
+
+# คำนวณ BMI
+bmi_value = calc_bmi(weight, height)
+bmi_text = f"{bmi_value:.1f}" if bmi_value else "-"
+bmi_result = interpret_bmi(bmi_value)
+
+# แปลผลความดัน
+bp_text = f"{sbp}/{dbp}" if sbp != "-" and dbp != "-" else "-"
+bp_result = interpret_bp(sbp, dbp)
+
+# ประเมินรอบเอว (เกณฑ์ 90 cm เป็นค่า default)
+waist_result = assess_waist(waist)
+
+# แสดงผลลัพธ์
+st.markdown("### 🧍‍♂️ ข้อมูลทั่วไป (เฉพาะปีที่เลือก)")
+data_summary = pd.DataFrame({
+    "น้ำหนัก (กก.)": [weight],
+    "ส่วนสูง (ซม.)": [height],
+    "รอบเอว (ซม.)": [waist],
+    "BMI": [bmi_text],
+    "แปลผล BMI": [bmi_result or "-"],
+    "ค่าความดัน (mmHg)": [bp_text],
+    "แปลผลความดัน": [bp_result or "-"],
+    "แปลผลรอบเอว": [waist_result or "-"],
+    "ชีพจร (bpm)": [pulse]
+})
+st.dataframe(data_summary.T.rename(columns={0: selected_year_display}), use_container_width=True)
