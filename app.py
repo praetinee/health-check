@@ -72,6 +72,5 @@ if st.button("ค้นหา"):
         **HN:** {person.get('HN', '-')}  
         **เลขบัตรประชาชน:** {person.get('เลขบัตรประชาชน', '-')}  
         **เพศ:** {person.get('เพศ', '-')}  
-        **อายุ:** {person.get('อายุ', '-')}  
         """)
         st.dataframe(person.to_frame().T, use_container_width=True)
