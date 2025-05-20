@@ -26,7 +26,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(service_account_info, s
 client = gspread.authorize(creds)
 
 # เปลี่ยน URL ตามไฟล์ใหม่ที่คุณใช้
-sheet_url = "https://docs.google.com/spreadsheets/d/1xNKbrils2AtuKsM5ZzU9F9LItZ0WsCqw"
+sheet_url = "https://docs.google.com/spreadsheets/d/1N3l0o_Y6QYbGKx22323mNLPym77N0jkJfyxXFM2BDmc"
 spreadsheet = client.open_by_url(sheet_url)
 worksheet = spreadsheet.sheet1
 df = pd.DataFrame(worksheet.get_all_records())
