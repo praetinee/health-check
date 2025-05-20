@@ -175,15 +175,31 @@ if "person_data" in st.session_state:
     st.dataframe(summary_df)
 
     # ===============================
-    # กราฟแนวโน้ม BMI (ภาษาอังกฤษเท่านั้น)
+    # กราฟแนวโน้ม BMI (ภาษาอังกฤษ + โซน)
     # ===============================
     st.markdown("### 📈 BMI Trend Over Years")
+
     bmi_values = [calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-")) for y in available_years]
     years_labels = [f"25{y}" for y in available_years]
 
-    fig, ax = plt.subplots()
-    ax.plot(years_labels, bmi_values, marker='o', linestyle='-')
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    # Plot ค่า BMI
+    ax.plot(years_labels, bmi_values, marker='o', linestyle='-', color='blue')
+
+    # ====== โซนสีตามระดับ BMI ======
+    ax.axhspan(0, 18.5, facecolor='#d0f0ff', alpha=0.4, label='Underweight 😕')
+    ax.axhspan(18.5, 23, facecolor='#d0ffd0', alpha=0.4, label='Normal 🙂')
+    ax.axhspan(23, 25, facecolor='#fff4b3', alpha=0.4, label='Overweight 😐')
+    ax.axhspan(25, 30, facecolor='#ffd0a0', alpha=0.4, label='Obese 😟')
+    ax.axhspan(30, 100, facecolor='#ffb3b3', alpha=0.4, label='Severely Obese 😵')
+
+    # ====== กำกับกราฟ ======
     ax.set_title("BMI Trend")
     ax.set_xlabel("Year (B.E.)")
     ax.set_ylabel("BMI")
+    ax.set_ylim(bottom=15, top=max(bmi_values + [30]) + 2)  # เผื่อพื้นที่บน
+    ax.legend(loc='upper right')
+
     st.pyplot(fig)
+
