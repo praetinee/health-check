@@ -213,74 +213,69 @@ if "person_data" in st.session_state:
     # ===============================
     # 💧 รายงานผลปัสสาวะประจำปี
     # ===============================
+
     urine_key = f"ผลปัสสาวะ{selected_year}" if selected_year < 68 else "ผลปัสสาวะ"
     urine_result = person.get(urine_key, "").strip()
 
-    # ดึงค่าผลดิบ
     alb_raw = person.get("Alb", "").strip()
     sugar_raw = person.get("sugar", "").strip()
     rbc_raw = person.get("RBC1", "").strip()
     wbc_raw = person.get("WBC1", "").strip()
 
-    # ฟังก์ชันแปลผล
-    def interpret_alb(val):
-        if val == "negative":
+    def translate_alb(value):
+        if value == "":
+            return "-"
+        v = value.lower()
+        if v == "negative":
             return "ไม่พบโปรตีนในปัสสาวะ"
-        elif val in ["trace", "1+", "2+"]:
+        elif v in ["trace", "1+", "2+"]:
             return "พบโปรตีนในปัสสาวะเล็กน้อย"
-        elif val == "3+":
+        elif v == "3+":
             return "พบโปรตีนในปัสสาวะ"
         return "-"
 
-    def interpret_sugar(val):
-        if val == "negative":
+    def translate_sugar(value):
+        if value == "":
+            return "-"
+        v = value.lower()
+        if v == "negative":
             return "ไม่พบน้ำตาลในปัสสาวะ"
-        elif val == "trace":
+        elif v == "trace":
             return "พบน้ำตาลในปัสสาวะเล็กน้อย"
-        elif val in ["1+", "2+", "3+", "4+", "5+", "6+"]:
+        elif v in ["1+", "2+", "3+", "4+", "5+", "6+"]:
             return "พบน้ำตาลในปัสสาวะ"
         return "-"
 
-    def interpret_rbc(val):
-        if val in ["0-1", "1-2", "2-3", "3-5", "negative"]:
+    def translate_rbc(value):
+        if value == "":
+            return "-"
+        v = value.lower()
+        if v in ["negative", "0-1", "1-2", "2-3", "3-5"]:
             return "ปกติ"
-        elif val in ["5-10", "10-20"]:
+        elif v in ["5-10", "10-20"]:
             return "พบเม็ดเลือดแดงในปัสสาวะเล็กน้อย"
-        elif val:
+        else:
             return "พบเม็ดเลือดแดงในปัสสาวะ"
-        return "-"
 
-    def interpret_wbc(val):
-        if val in ["0-1", "1-2", "2-3", "3-5", "negative"]:
+    def translate_wbc(value):
+        if value == "":
+            return "-"
+        v = value.lower()
+        if v in ["negative", "0-1", "1-2", "2-3", "3-5"]:
             return "ปกติ"
-        elif val in ["5-10", "10-20"]:
+        elif v in ["5-10", "10-20"]:
             return "พบเม็ดเลือดขาวในปัสสาวะเล็กน้อย"
-        elif val:
+        else:
             return "พบเม็ดเลือดขาวในปัสสาวะ"
-        return "-"
-
-    # แปลผล
-    alb_interp = interpret_alb(alb_raw)
-    sugar_interp = interpret_sugar(sugar_raw)
-    rbc_interp = interpret_rbc(rbc_raw)
-    wbc_interp = interpret_wbc(wbc_raw)
 
     # แสดงผล
-    if urine_result or any([alb_raw, sugar_raw, rbc_raw, wbc_raw]):
+    if urine_result or alb_raw or sugar_raw or rbc_raw or wbc_raw:
         st.markdown(f"### 💧 ผลการตรวจปัสสาวะ ปี พ.ศ. 25{selected_year}")
-
-        if urine_result:
-            st.markdown(f"- **สรุปผลรวม:** {urine_result}")
-
+        st.markdown(f"- **สรุปผลรวม:** {urine_result if urine_result else '-'}")
+        st.markdown("#### รายละเอียด")
         st.markdown(f"""
-        - **โปรตีนในปัสสาวะ (Alb):** {alb_raw or '-'} ({alb_interp})
-        - **น้ำตาลในปัสสาวะ (Sugar):** {sugar_raw or '-'} ({sugar_interp})
-        - **เม็ดเลือดแดง (RBC1):** {rbc_raw or '-'} ({rbc_interp})
-        - **เม็ดเลือดขาว (WBC1):** {wbc_raw or '-'} ({wbc_interp})
+        - **โปรตีนในปัสสาวะ:** {alb_raw or '-'} ({translate_alb(alb_raw)})
+        - **น้ำตาลในปัสสาวะ:** {sugar_raw or '-'} ({translate_sugar(sugar_raw)})
+        - **เม็ดเลือดแดง:** {rbc_raw or '-'} ({translate_rbc(rbc_raw)})
+        - **เม็ดเลือดขาว:** {wbc_raw or '-'} ({translate_wbc(wbc_raw)})
         """)
-
-        # คำแนะนำ (ถ้ามีใน dataset)
-        urine_advice = person.get("คำแนะนำปัสสาวะ", "").strip()
-        if urine_advice:
-            st.warning(f"📌 คำแนะนำ: {urine_advice}")
-
