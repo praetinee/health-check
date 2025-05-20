@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import gspread
 import json
+import re
+import matplotlib.pyplot as plt
 from oauth2client.service_account import ServiceAccountCredentials
 
 # ===============================
@@ -35,7 +37,7 @@ df['HN'] = df['HN'].astype(str)
 df['ชื่อ-สกุล'] = df['ชื่อ-สกุล'].astype(str)
 
 # ===============================
-# FUNCTION
+# FUNCTIONS
 # ===============================
 def calc_bmi(weight, height):
     try:
@@ -117,9 +119,14 @@ if submitted:
         st.success(f"✅ พบข้อมูลของ: {person['ชื่อ-สกุล']}")
         st.markdown(f"**HN:** {person['HN']}  \n**เลขบัตรประชาชน:** {person['เลขบัตรประชาชน']}  \n**เพศ:** {person.get('เพศ', '-')}")
 
-        # ปีให้เลือก
-        all_years = list(range(61, 69))
-        year_display = {f"พ.ศ. 25{y}": y for y in all_years}
+        # ค้นหาปีทั้งหมดแบบไดนามิก
+        available_years = sorted(set(
+            int(re.search(r'(\d{2})$', col).group(1)) 
+            for col in df.columns 
+            if re.search(r'น้ำหนัก\d{2}$', col)
+        ), reverse=True)
+
+        year_display = {f"พ.ศ. 25{y}": y for y in available_years}
         selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
         selected_year = year_display[selected_label]
 
@@ -144,3 +151,35 @@ if submitted:
         - **ความดันโลหิต:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})  
         - **ชีพจร:** {pulse} ครั้ง/นาที
         """)
+
+        # ===============================
+        # ตารางเปรียบเทียบผลหลายปี
+        # ===============================
+        summary_data = []
+        for y in available_years:
+            summary_data.append({
+                "ปี พ.ศ.": f"25{y}",
+                "น้ำหนัก (กก.)": person.get(f"น้ำหนัก{y}", "-"),
+                "ส่วนสูง (ซม.)": person.get(f"ส่วนสูง{y}", "-"),
+                "รอบเอว (ซม.)": person.get(f"รอบเอว{y}", "-"),
+                "BMI": calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-")),
+                "ความดัน": f"{person.get(f'SBP{y}', '-')}/{person.get(f'DBP{y}', '-')}",
+                "ชีพจร": person.get(f"pulse{y}", "-")
+            })
+        summary_df = pd.DataFrame(summary_data)
+        st.markdown("### 📊 สรุปผลสุขภาพหลายปี")
+        st.dataframe(summary_df)
+
+        # ===============================
+        # กราฟแสดงแนวโน้ม BMI
+        # ===============================
+        st.markdown("### 📈 แนวโน้มค่า BMI")
+        bmi_values = [calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-")) for y in available_years]
+        years_labels = [f"25{y}" for y in available_years]
+
+        fig, ax = plt.subplots()
+        ax.plot(years_labels, bmi_values, marker='o', linestyle='-')
+        ax.set_title("แนวโน้ม BMI")
+        ax.set_xlabel("ปี พ.ศ.")
+        ax.set_ylabel("BMI")
+        st.pyplot(fig)
