@@ -7,7 +7,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # ===============================
 # PAGE CONFIG + FONTS
 # ===============================
-st.set_page_config(page_title="ตรวจสอบผลสุขภาพ", layout="wide")
+st.set_page_config(page_title="ระบบรายงานสุขภาพ", layout="wide")
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun&display=swap');
@@ -35,42 +35,112 @@ df['HN'] = df['HN'].astype(str)
 df['ชื่อ-สกุล'] = df['ชื่อ-สกุล'].astype(str)
 
 # ===============================
-# HEADER
+# FUNCTION
 # ===============================
-st.markdown("""
-<h1 style='text-align:center;'>ระบบรายงานผลตรวจสุขภาพ</h1>
-<h4 style='text-align:center; color:gray;'>- กลุ่มงานอาชีวเวชกรรม รพ.สันทราย -</h4>
-""", unsafe_allow_html=True)
+def calc_bmi(weight, height):
+    try:
+        weight = float(weight)
+        height = float(height)
+        return round(weight / ((height / 100) ** 2), 1)
+    except:
+        return None
+
+def interpret_bmi(bmi):
+    if bmi is None:
+        return "-"
+    if bmi > 30:
+        return "อ้วนมาก"
+    elif bmi >= 25:
+        return "อ้วน"
+    elif bmi >= 23:
+        return "น้ำหนักเกิน"
+    elif bmi >= 18.5:
+        return "ปกติ"
+    else:
+        return "ผอม"
+
+def interpret_bp(sbp, dbp):
+    try:
+        sbp = float(sbp)
+        dbp = float(dbp)
+        if sbp == 0 or dbp == 0:
+            return "-"
+        if sbp >= 160 or dbp >= 100:
+            return "ความดันโลหิตสูง"
+        elif sbp >= 140 or dbp >= 90:
+            return "ความดันโลหิตสูงเล็กน้อย"
+        elif sbp < 120 and dbp < 80:
+            return "ความดันโลหิตปกติ"
+        else:
+            return "ความดันโลหิตปกติค่อนข้างสูง"
+    except:
+        return "-"
+
+def assess_waist(waist):
+    try:
+        waist = float(waist)
+        return "เกินเกณฑ์" if waist > 90 else "ปกติ"
+    except:
+        return "-"
 
 # ===============================
-# SEARCH FORM
+# HEADER & FORM
 # ===============================
-with st.form("search_form", clear_on_submit=False):
+st.markdown("<h1 style='text-align:center;'>ระบบรายงานผลตรวจสุขภาพ</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align:center; color:gray;'>- กลุ่มงานอาชีวเวชกรรม รพ.สันทราย -</h4>", unsafe_allow_html=True)
+
+with st.form("search_form"):
     col1, col2, col3 = st.columns(3)
     with col1:
-        citizen_id = st.text_input("เลขบัตรประชาชน", placeholder="เช่น 1234567890123", key="cid")
+        id_card = st.text_input("เลขบัตรประชาชน")
     with col2:
-        hn = st.text_input("HN", placeholder="เช่น 123456", key="hn")
+        hn = st.text_input("HN")
     with col3:
-        full_name = st.text_input("ชื่อ-สกุล", placeholder="เช่น สมชาย ใจดี", key="fname")
-
+        full_name = st.text_input("ชื่อ-สกุล")
     submitted = st.form_submit_button("ตรวจสอบ")
 
 if submitted:
-    result = pd.DataFrame()
-    if citizen_id.strip():
-        result = df[df['เลขบัตรประชาชน'] == citizen_id.strip()]
+    person = None
+    if id_card.strip():
+        result = df[df["เลขบัตรประชาชน"] == id_card.strip()]
     elif hn.strip():
-        result = df[df['HN'] == hn.strip()]
+        result = df[df["HN"] == hn.strip()]
     elif full_name.strip():
-        result = df[df['ชื่อ-สกุล'].str.strip() == full_name.strip()]
+        result = df[df["ชื่อ-สกุล"].str.strip() == full_name.strip()]
+    else:
+        result = pd.DataFrame()
 
     if result.empty:
         st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
     else:
         person = result.iloc[0]
-        st.success(f"✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}")
-        st.markdown(f"**HN:** {person.get('HN', '-')}  ")
-        st.markdown(f"**เลขบัตรประชาชน:** {person.get('เลขบัตรประชาชน', '-')}  ")
-        st.markdown(f"**เพศ:** {person.get('เพศ', '-')}  ")
-        st.dataframe(person.to_frame().T, use_container_width=True)
+        st.success(f"✅ พบข้อมูลของ: {person['ชื่อ-สกุล']}")
+        st.markdown(f"**HN:** {person['HN']}  \n**เลขบัตรประชาชน:** {person['เลขบัตรประชาชน']}  \n**เพศ:** {person.get('เพศ', '-')}")
+
+        # ปีให้เลือก
+        all_years = list(range(61, 69))
+        year_display = {f"พ.ศ. 25{y}": y for y in all_years}
+        selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
+        selected_year = year_display[selected_label]
+
+        # ดึงค่าตามปี
+        weight = person.get(f"น้ำหนัก{selected_year}", "-")
+        height = person.get(f"ส่วนสูง{selected_year}", "-")
+        waist = person.get(f"รอบเอว{selected_year}", "-")
+        sbp = person.get(f"SBP{selected_year}", "-")
+        dbp = person.get(f"DBP{selected_year}", "-")
+        pulse = person.get(f"pulse{selected_year}", "-")
+
+        bmi = calc_bmi(weight, height)
+        bmi_text = f"{bmi:.1f}" if bmi else "-"
+
+        st.markdown("### 📋 ข้อมูลสุขภาพประจำปี")
+        st.markdown(f"""
+        - **ปี พ.ศ.**: 25{selected_year}  
+        - **น้ำหนัก:** {weight} กก.  
+        - **ส่วนสูง:** {height} ซม.  
+        - **รอบเอว:** {waist} ซม. ({assess_waist(waist)})  
+        - **BMI:** {bmi_text} ({interpret_bmi(bmi)})  
+        - **ความดันโลหิต:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})  
+        - **ชีพจร:** {pulse} ครั้ง/นาที
+        """)
