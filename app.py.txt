@@ -14,7 +14,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(service_account_info, s
 client = gspread.authorize(creds)
 
 # ดึงข้อมูลจาก Google Sheets
-spreadsheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1B_W02AlW7RoV2_qbOHAfVTTYUkKgfyqvjl_IgqQVmzc")
+spreadsheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1XmYIOdp6dxjQbfn17xhDLVwUMswgU_mwUYFlEX7rOgI")
 worksheet = spreadsheet.sheet1
 df = pd.DataFrame(worksheet.get_all_records())
 
