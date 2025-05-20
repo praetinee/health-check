@@ -174,41 +174,45 @@ if "person_data" in st.session_state:
     st.markdown("### 📊 สรุปผลสุขภาพรายปี (แนวนอน)")
     st.dataframe(summary_df)
 
-    # ===============================
-    # กราฟแนวโน้ม BMI (เรียงปีจากน้อยไปมาก + สีเข้ม)
-    # ===============================
-    st.markdown("### 📈 BMI Trend Over Years")
+# ===============================
+# กราฟแนวโน้ม BMI (ปลอดภัย + โซนสีเข้ม + เรียงปี)
+# ===============================
+st.markdown("### 📈 BMI Trend Over Years")
 
-    # เรียงปีจากน้อยไปมาก
-    available_years_sorted = sorted(available_years)
+# เรียงปีจากน้อยไปมาก
+available_years_sorted = sorted(available_years)
 
-    # สร้างข้อมูลตามปีที่เรียงแล้ว
-    bmi_values = [
-        calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-"))
-        for y in available_years_sorted
-    ]
-    years_labels = [f"25{y}" for y in available_years_sorted]
+# คำนวณ BMI แต่ละปี
+bmi_values = [
+    calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-"))
+    for y in available_years_sorted
+]
+years_labels = [f"25{y}" for y in available_years_sorted]
 
+# กรองเฉพาะค่าที่เป็นตัวเลข
+valid_bmi_values = [v for v in bmi_values if isinstance(v, (int, float))]
+
+if valid_bmi_values:
     fig, ax = plt.subplots(figsize=(8, 5))
 
-    # Plot ค่า BMI
     ax.plot(years_labels, bmi_values, marker='o', linestyle='-', color='blue')
 
-    # ====== โซนสีเข้มตามระดับ BMI ======
+    # แบ่งโซนสีตามระดับ BMI
     ax.axhspan(0, 18.5, facecolor='#66ccff', alpha=0.6, label='Underweight')
     ax.axhspan(18.5, 23, facecolor='#66ff66', alpha=0.6, label='Normal')
     ax.axhspan(23, 25, facecolor='#ffff66', alpha=0.6, label='Overweight')
     ax.axhspan(25, 30, facecolor='#ff9933', alpha=0.6, label='Obese')
     ax.axhspan(30, 100, facecolor='#ff6666', alpha=0.6, label='Severely Obese')
 
-    # ====== ตั้งค่ากราฟ ======
     ax.set_title("BMI Trend")
     ax.set_xlabel("Year (B.E.)")
     ax.set_ylabel("BMI")
-    ax.set_ylim(bottom=15, top=max(bmi_values + [30]) + 2)
+    ax.set_ylim(bottom=15, top=max(valid_bmi_values + [30]) + 2)
     ax.legend(loc='upper right')
 
     st.pyplot(fig)
+else:
+    st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟแนวโน้ม")
 
 # ===============================
 # 💧รายงานผลปัสสาวะประจำปี (พร้อมแปลผล + คำแนะนำ)
