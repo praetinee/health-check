@@ -118,14 +118,13 @@ if submitted:
         st.session_state["person_data"] = result.iloc[0].to_dict()
 
 # ===============================
-# SHOW RESULTS
+# DISPLAY RESULTS
 # ===============================
 if "person_data" in st.session_state:
     person = st.session_state["person_data"]
     st.success(f"✅ พบข้อมูลของ: {person['ชื่อ-สกุล']}")
     st.markdown(f"**HN:** {person['HN']}  \n**เลขบัตรประชาชน:** {person['เลขบัตรประชาชน']}  \n**เพศ:** {person.get('เพศ', '-')}")
 
-    # ปีที่มีในข้อมูล
     available_years = sorted(set(
         int(re.search(r'(\d{2})$', col).group(1)) 
         for col in df.columns 
@@ -136,48 +135,47 @@ if "person_data" in st.session_state:
     selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
     selected_year = year_display[selected_label]
 
-    # ดึงค่าตามปี
+    # ข้อมูลรายปี
     weight = person.get(f"น้ำหนัก{selected_year}", "-")
     height = person.get(f"ส่วนสูง{selected_year}", "-")
     waist = person.get(f"รอบเอว{selected_year}", "-")
     sbp = person.get(f"SBP{selected_year}", "-")
     dbp = person.get(f"DBP{selected_year}", "-")
     pulse = person.get(f"pulse{selected_year}", "-")
-
     bmi = calc_bmi(weight, height)
     bmi_text = f"{bmi:.1f}" if bmi else "-"
 
     st.markdown("### 📋 ข้อมูลสุขภาพประจำปี")
     st.markdown(f"""
-    - **Year (B.E.):** 25{selected_year}  
-    - **Weight:** {weight} kg  
-    - **Height:** {height} cm  
-    - **Waist:** {waist} cm ({assess_waist(waist)})  
+    - **ปี พ.ศ.**: 25{selected_year}  
+    - **น้ำหนัก:** {weight} กก.  
+    - **ส่วนสูง:** {height} ซม.  
+    - **รอบเอว:** {waist} ซม. ({assess_waist(waist)})  
     - **BMI:** {bmi_text} ({interpret_bmi(bmi)})  
-    - **Blood Pressure:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})  
-    - **Pulse:** {pulse} bpm
+    - **ความดันโลหิต:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})  
+    - **ชีพจร:** {pulse} ครั้ง/นาที
     """)
 
     # ===============================
-    # Health Summary Table (Transposed)
+    # สรุปสุขภาพแบบ Transpose
     # ===============================
     summary_data = {}
     for y in available_years:
         summary_data[f"25{y}"] = {
-            "Weight (kg)": person.get(f"น้ำหนัก{y}", "-"),
-            "Height (cm)": person.get(f"ส่วนสูง{y}", "-"),
-            "Waist (cm)": person.get(f"รอบเอว{y}", "-"),
+            "น้ำหนัก (กก.)": person.get(f"น้ำหนัก{y}", "-"),
+            "ส่วนสูง (ซม.)": person.get(f"ส่วนสูง{y}", "-"),
+            "รอบเอว (ซม.)": person.get(f"รอบเอว{y}", "-"),
             "BMI": calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-")),
-            "Blood Pressure": f"{person.get(f'SBP{y}', '-')}/{person.get(f'DBP{y}', '-')}",
-            "Pulse": person.get(f"pulse{y}", "-")
+            "ความดัน": f"{person.get(f'SBP{y}', '-')}/{person.get(f'DBP{y}', '-')}",
+            "ชีพจร": person.get(f"pulse{y}", "-")
         }
 
     summary_df = pd.DataFrame(summary_data)
-    st.markdown("### 📊 Health Summary (Transposed View)")
+    st.markdown("### 📊 สรุปผลสุขภาพรายปี (แนวนอน)")
     st.dataframe(summary_df)
 
     # ===============================
-    # BMI Trend Chart
+    # กราฟแนวโน้ม BMI (ภาษาอังกฤษเท่านั้น)
     # ===============================
     st.markdown("### 📈 BMI Trend Over Years")
     bmi_values = [calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-")) for y in available_years]
