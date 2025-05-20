@@ -210,3 +210,30 @@ if "person_data" in st.session_state:
 
     st.pyplot(fig)
 
+    # ===============================
+    # รายงานผลปัสสาวะประจำปี
+    # ===============================
+    urine_key = f"ผลปัสสาวะ{selected_year}" if selected_year < 68 else "ผลปัสสาวะ"
+    urine_result = person.get(urine_key, "").strip()
+
+    if urine_result:
+        st.markdown("### 💧 ผลการตรวจปัสสาวะ")
+        st.markdown(f"- **ผลการตรวจปัสสาวะ:** {urine_result}")
+
+        # ===== แสดงผลย่อยเพิ่มเติม (ถ้าต้องการเปิดใช้งาน) =====
+        # alb = person.get("Alb", "-")
+        # sugar = person.get("sugar", "-")
+        # rbc = person.get("RBC1", "-")
+        # wbc = person.get("WBC1", "-")
+        #
+        # st.markdown(f"""
+        # - **Albumin (Alb):** {alb}
+        # - **Sugar:** {sugar}
+        # - **RBC:** {rbc}
+        # - **WBC:** {wbc}
+        # """)
+
+        # ===== ดึงคำแนะนำ (ถ้ามีใน dataset) =====
+        urine_advice = person.get("คำแนะนำปัสสาวะ", "").strip()
+        if urine_advice:
+            st.warning(f"📌 คำแนะนำ: {urine_advice}")
