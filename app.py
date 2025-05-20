@@ -175,7 +175,7 @@ if "person_data" in st.session_state:
     st.dataframe(summary_df)
 
     # ===============================
-    # กราฟแนวโน้ม BMI (ภาษาอังกฤษ + โซน)
+    # กราฟแนวโน้ม BMI (สีเข้มขึ้น + ไม่มีอีโมติคอน)
     # ===============================
     st.markdown("### 📈 BMI Trend Over Years")
 
@@ -187,19 +187,18 @@ if "person_data" in st.session_state:
     # Plot ค่า BMI
     ax.plot(years_labels, bmi_values, marker='o', linestyle='-', color='blue')
 
-    # ====== โซนสีตามระดับ BMI ======
-    ax.axhspan(0, 18.5, facecolor='#d0f0ff', alpha=0.4, label='Underweight 😕')
-    ax.axhspan(18.5, 23, facecolor='#d0ffd0', alpha=0.4, label='Normal 🙂')
-    ax.axhspan(23, 25, facecolor='#fff4b3', alpha=0.4, label='Overweight 😐')
-    ax.axhspan(25, 30, facecolor='#ffd0a0', alpha=0.4, label='Obese 😟')
-    ax.axhspan(30, 100, facecolor='#ffb3b3', alpha=0.4, label='Severely Obese 😵')
+    # ====== โซนสีเข้มตามระดับ BMI ======
+    ax.axhspan(0, 18.5, facecolor='#66ccff', alpha=0.6, label='Underweight')
+    ax.axhspan(18.5, 23, facecolor='#66ff66', alpha=0.6, label='Normal')
+    ax.axhspan(23, 25, facecolor='#ffff66', alpha=0.6, label='Overweight')
+    ax.axhspan(25, 30, facecolor='#ff9933', alpha=0.6, label='Obese')
+    ax.axhspan(30, 100, facecolor='#ff6666', alpha=0.6, label='Severely Obese')
 
-    # ====== กำกับกราฟ ======
+    # ====== ตั้งค่ากราฟ ======
     ax.set_title("BMI Trend")
     ax.set_xlabel("Year (B.E.)")
     ax.set_ylabel("BMI")
-    ax.set_ylim(bottom=15, top=max(bmi_values + [30]) + 2)  # เผื่อพื้นที่บน
+    ax.set_ylim(bottom=15, top=max(bmi_values + [30]) + 2)
     ax.legend(loc='upper right')
 
     st.pyplot(fig)
-
