@@ -175,12 +175,19 @@ if "person_data" in st.session_state:
     st.dataframe(summary_df)
 
     # ===============================
-    # กราฟแนวโน้ม BMI (สีเข้มขึ้น + ไม่มีอีโมติคอน)
+    # กราฟแนวโน้ม BMI (เรียงปีจากน้อยไปมาก + สีเข้ม)
     # ===============================
     st.markdown("### 📈 BMI Trend Over Years")
 
-    bmi_values = [calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-")) for y in available_years]
-    years_labels = [f"25{y}" for y in available_years]
+    # เรียงปีจากน้อยไปมาก
+    available_years_sorted = sorted(available_years)
+
+    # สร้างข้อมูลตามปีที่เรียงแล้ว
+    bmi_values = [
+        calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-"))
+        for y in available_years_sorted
+    ]
+    years_labels = [f"25{y}" for y in available_years_sorted]
 
     fig, ax = plt.subplots(figsize=(8, 5))
 
@@ -202,3 +209,4 @@ if "person_data" in st.session_state:
     ax.legend(loc='upper right')
 
     st.pyplot(fig)
+
