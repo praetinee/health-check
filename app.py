@@ -38,40 +38,39 @@ df['HN'] = df['HN'].astype(str)
 df['ชื่อ-สกุล'] = df['ชื่อ-สกุล'].astype(str)
 
 # ===============================
+# HEADER
+# ===============================
+st.markdown("""
+<h1 style='text-align:center;'>ระบบรายงานผลตรวจสุขภาพ</h1>
+<h4 style='text-align:center; color:gray;'>- กลุ่มงานอาชีวเวชกรรม รพ.สันทราย -</h4>
+""", unsafe_allow_html=True)
+
+# ===============================
 # SEARCH UI
 # ===============================
-st.markdown("<h1 style='text-align:center;'>🔍 ตรวจสอบผลสุขภาพของคุณ</h1>", unsafe_allow_html=True)
-
-# ช่องกรอกข้อมูลแนวนอน
 col1, col2, col3 = st.columns(3)
 with col1:
     id_card = st.text_input("เลขบัตรประชาชน", placeholder="เช่น 1234567890123")
 with col2:
-    hn = st.text_input("HN", placeholder="เช่น 012345")
+    hn = st.text_input("HN", placeholder="เช่น 123456")
 with col3:
     full_name = st.text_input("ชื่อ-สกุล", placeholder="เช่น สมชาย ใจดี")
 
-# ปุ่มค้นหา (อยู่นอก columns)
-if st.button("ค้นหา"):
-    result = pd.DataFrame()
+# ปุ่มค้นหา
+search_triggered = st.button("ตรวจสอบ")
+if search_triggered or id_card or hn or full_name:
+    matched = df[
+        (df['เลขบัตรประชาชน'] == id_card.strip()) |
+        (df['HN'] == hn.strip()) |
+        (df['ชื่อ-สกุล'].str.contains(full_name.strip(), case=False, na=False))
+    ]
 
-    if id_card.strip():
-        result = df[df["เลขบัตรประชาชน"] == id_card.strip()]
-    elif hn.strip():
-        result = df[df["HN"] == hn.strip()]
-    elif full_name.strip():
-        result = df[df["ชื่อ-สกุล"] == full_name.strip()]
-
-    if result.empty:
+    if matched.empty:
         st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
-        st.write("🔎 ลองตรวจสอบชื่อคอลัมน์ใน Google Sheets และชื่อ-นามสกุล หรือ HN อีกครั้ง")
     else:
-        person = result.iloc[0]
+        person = matched.iloc[0]
         st.success(f"✅ พบข้อมูลของ {person.get('ชื่อ-สกุล', '-')}")
-        st.markdown(f"""
-        **HN:** {person.get('HN', '-')}  
-        **เลขบัตรประชาชน:** {person.get('เลขบัตรประชาชน', '-')}  
-        **เพศ:** {person.get('เพศ', '-')}  
-        **อายุ:** {person.get('อายุ', '-')}  
-        """)
+        st.markdown(f"**HN:** {person.get('HN', '-')}  ")
+        st.markdown(f"**เลขบัตรประชาชน:** {person.get('เลขบัตรประชาชน', '-')}  ")
+        st.markdown(f"**เพศ:** {person.get('เพศ', '-')}  ")
         st.dataframe(person.to_frame().T, use_container_width=True)
