@@ -2,13 +2,9 @@ import streamlit as st
 import pandas as pd
 import gspread
 import json
-import re
 import matplotlib.pyplot as plt
 from oauth2client.service_account import ServiceAccountCredentials
 
-# ===============================
-# PAGE CONFIG + FONTS
-# ===============================
 st.set_page_config(page_title="ระบบรายงานสุขภาพ", layout="wide")
 st.markdown("""
     <style>
@@ -124,25 +120,43 @@ if submitted:
         st.dataframe(query)
         st.stop()
     else:
-        st.session_state["person_data"] = query.iloc[0].to_dict()
+        st.session_state["person_records"] = query
 
 # ===============================
 # DISPLAY RESULTS
 # ===============================
-if "person_data" in st.session_state:
-    person = st.session_state["person_data"]
-    st.success(f"✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}")
-    st.markdown(f"**HN:** {person.get('HN', '-')}  \n**เลขบัตรประชาชน:** {person.get('เลขบัตรประชาชน', '-')}  \n**เพศ:** {person.get('เพศ', '-')}")
+if "person_records" in st.session_state:
+    person_df = st.session_state["person_records"]
+    person_info = person_df.iloc[0]
 
-    # Optional: เพิ่มการแสดงผล BMI, BP, Waist ได้ถ้ามีในข้อมูล
-    weight = person.get("น้ำหนัก")
-    height = person.get("ส่วนสูง")
-    bmi = calc_bmi(weight, height)
-    sbp = person.get("SBP", 0)
-    dbp = person.get("DBP", 0)
-    waist = person.get("รอบเอว", 0)
+    # Header line
+    line_info = f"""
+    ✅ พบข้อมูลของ: **{person_info.get('ชื่อ-สกุล', '-')}**  
+    🆔 {person_info.get('เลขบัตรประชาชน', '-')} | HN: {person_info.get('HN', '-')} | เพศ: {person_info.get('เพศ', '-')}
+    """
+    st.markdown(line_info)
 
-    st.markdown("### 📊 ผลประเมินสุขภาพ")
-    st.write(f"**BMI:** {bmi} ({interpret_bmi(bmi)})")
-    st.write(f"**ความดันโลหิต:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})")
-    st.write(f"**รอบเอว:** {waist} ซม. ({assess_waist(waist)})")
+    # Health info by year
+    st.markdown("### 📊 น้ำหนัก / ส่วนสูง / รอบเอว")
+
+    if "ปี" not in person_df.columns:
+        st.warning("ไม่พบคอลัมน์ 'ปี' กรุณาตรวจสอบ Google Sheet ว่ามีปีระบุหรือไม่")
+    else:
+        person_df = person_df.sort_values(by="ปี", ascending=False)
+        for _, row in person_df.iterrows():
+            year = int(row.get("ปี", 0))
+            weight = row.get("น้ำหนัก")
+            height = row.get("ส่วนสูง")
+            waist = row.get("รอบเอว")
+            sbp = row.get("SBP", 0)
+            dbp = row.get("DBP", 0)
+            pulse = row.get("ชีพจร", "-")
+            bmi = calc_bmi(weight, height)
+
+            st.markdown(f"#### 🗓 ปี {year + 543}")
+            st.write(f"- น้ำหนัก: {weight} กก.")
+            st.write(f"- ส่วนสูง: {height} ซม.")
+            st.write(f"- รอบเอว: {waist} ซม. ({assess_waist(waist)})")
+            st.write(f"- BMI: {bmi} ({interpret_bmi(bmi)})")
+            st.write(f"- ความดัน: {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})")
+            st.write(f"- ชีพจร: {pulse} ครั้ง/นาที")
