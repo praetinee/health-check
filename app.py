@@ -254,10 +254,10 @@ if "person" in st.session_state:
         st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
 
 # ===============================
-# DISPLAY: URINE TEST
+# DISPLAY: URINE TEST BY YEAR
 # ===============================
 
-# ฟังก์ชันแปลผลตรวจปัสสาวะ
+# ฟังก์ชันแปลผล
 def interpret_alb(value):
     if value == "":
         return "-"
@@ -300,7 +300,7 @@ def interpret_wbc(value):
     else:
         return "พบเม็ดเลือดขาวในปัสสาวะ"
 
-# เตรียมตาราง
+# ตารางผลตรวจปัสสาวะ
 urine_table = {
     "ปี พ.ศ.": [],
     "โปรตีน": [],
@@ -310,11 +310,16 @@ urine_table = {
 }
 
 for y in years:
-    cols = columns_by_year[y]
-    alb = person.get("Alb", "")
-    sugar = person.get("sugar", "")
-    rbc = person.get("RBC1", "")
-    wbc = person.get("WBC1", "")
+    year_label = str(y) if y != 68 else ""  # ปี 68 ไม่มีเลขท้าย
+    alb_col = f"Alb{year_label}"
+    sugar_col = f"sugar{year_label}"
+    rbc_col = f"RBC1{year_label}"
+    wbc_col = f"WBC1{year_label}"
+
+    alb = person.get(alb_col, "")
+    sugar = person.get(sugar_col, "")
+    rbc = person.get(rbc_col, "")
+    wbc = person.get(wbc_col, "")
 
     alb_result = f"{alb}<br><span style='font-size: 13px; color: gray;'>{interpret_alb(alb)}</span>" if alb else "-"
     sugar_result = f"{sugar}<br><span style='font-size: 13px; color: gray;'>{interpret_sugar(sugar)}</span>" if sugar else "-"
@@ -327,7 +332,7 @@ for y in years:
     urine_table["เม็ดเลือดแดง"].append(rbc_result)
     urine_table["เม็ดเลือดขาว"].append(wbc_result)
 
-# แสดงผลแบบ HTML เพื่อรองรับ <br>
-st.markdown("### 🚽 ผลตรวจปัสสาวะ")
+# แสดงผล
+st.markdown("### 🚽 ผลตรวจปัสสาวะ (ปี 61–68)")
 urine_df = pd.DataFrame(urine_table).set_index("ปี พ.ศ.").T
 st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
