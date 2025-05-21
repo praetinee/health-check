@@ -125,12 +125,6 @@ if "person_data" in st.session_state:
     st.success(f"✅ พบข้อมูลของ: {person['ชื่อ-สกุล']}")
     st.markdown(f"**HN:** {person['HN']}  \n**เลขบัตรประชาชน:** {person['เลขบัตรประชาชน']}  \n**เพศ:** {person.get('เพศ', '-')}")
 
-    available_years = sorted(set(
-        int(re.search(r'(\d{2})$', col).group(1)) 
-        for col in df.columns 
-        if re.search(r'น้ำหนัก\d{2}$', col)
-    ), reverse=True)
-
     year_display = {f"พ.ศ. 25{y}": y for y in available_years}
     selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
     selected_year = year_display[selected_label]
@@ -143,7 +137,7 @@ if "person_data" in st.session_state:
     dbp = person.get(f"DBP{selected_year}", "-")
     pulse = person.get(f"pulse{selected_year}", "-")
     bmi = calc_bmi(weight, height)
-    bmi_text = f"{bmi:.1f}" if bmi else "-"
+    bmi_text = f"{bmi:.1f}" if isinstance(bmi, (int, float)) else "-"
 
     st.markdown("### 📋 ข้อมูลสุขภาพประจำปี")
     st.markdown(f"""
