@@ -262,7 +262,7 @@ if "person" in st.session_state:
         if value == "":
             return "-"
         if value == "negative":
-            return "ไม่พบโปรตีนในปัสสาวะ"
+            return "ไม่พบ"
         elif value in ["trace", "1+", "2+"]:
             return "พบโปรตีนในปัสสาวะเล็กน้อย"
         elif value == "3+":
@@ -273,7 +273,7 @@ if "person" in st.session_state:
         if value == "":
             return "-"
         if value == "negative":
-            return "ไม่พบน้ำตาลในปัสสาวะ"
+            return "ไม่พบ"
         elif value == "trace":
             return "พบน้ำตาลในปัสสาวะเล็กน้อย"
         elif value in ["1+", "2+", "3+", "4+", "5+", "6+"]:
@@ -303,10 +303,10 @@ if "person" in st.session_state:
     # ตารางผลตรวจปัสสาวะ
     urine_table = {
         "ปี พ.ศ.": [],
-        "โปรตีน": [],
-        "น้ำตาล": [],
-        "เม็ดเลือดแดง": [],
-        "เม็ดเลือดขาว": []
+        "โปรตีนในปัสสาวะ": [],
+        "น้ำตาลในปัสสาวะ": [],
+        "เม็ดเลือดแดงในปัสสาวะ": [],
+        "เม็ดเลือดขาวในปัสสาวะ": []
     }
 
     for y in years:
