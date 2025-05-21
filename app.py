@@ -32,6 +32,12 @@ spreadsheet = client.open_by_url(sheet_url)
 worksheet = spreadsheet.sheet1
 df = pd.DataFrame(worksheet.get_all_records())
 df.columns = df.columns.str.strip()
+
+required_columns = ['เลขบัตรประชาชน', 'HN', 'ชื่อ-สกุล']
+if not all(col in df.columns for col in required_columns):
+    st.error("❌ โครงสร้างข้อมูลผิด กรุณาตรวจสอบ Google Sheet")
+    st.stop()
+
 df['เลขบัตรประชาชน'] = df['เลขบัตรประชาชน'].astype(str)
 df['HN'] = df['HN'].astype(str)
 df['ชื่อ-สกุล'] = df['ชื่อ-สกุล'].astype(str)
@@ -44,7 +50,7 @@ def calc_bmi(weight, height):
         weight = float(weight)
         height = float(height)
         return round(weight / ((height / 100) ** 2), 1)
-    except:
+    except (ValueError, TypeError):
         return None
 
 def interpret_bmi(bmi):
@@ -75,14 +81,14 @@ def interpret_bp(sbp, dbp):
             return "ความดันโลหิตปกติ"
         else:
             return "ความดันโลหิตปกติค่อนข้างสูง"
-    except:
+    except (ValueError, TypeError):
         return "-"
 
 def assess_waist(waist):
     try:
         waist = float(waist)
         return "เกินเกณฑ์" if waist > 90 else "ปกติ"
-    except:
+    except (ValueError, TypeError):
         return "-"
 
 # ===============================
@@ -102,271 +108,41 @@ with st.form("search_form"):
     submitted = st.form_submit_button("ตรวจสอบ")
 
 if submitted:
-    person = None
-    if id_card.strip():
-        result = df[df["เลขบัตรประชาชน"] == id_card.strip()]
-    elif hn.strip():
-        result = df[df["HN"] == hn.strip()]
-    elif full_name.strip():
-        result = df[df["ชื่อ-สกุล"].str.strip() == full_name.strip()]
-    else:
-        result = pd.DataFrame()
+    query = df.copy()
 
-    if result.empty:
+    if id_card.strip():
+        query = query[query["เลขบัตรประชาชน"] == id_card.strip()]
+    if hn.strip():
+        query = query[query["HN"] == hn.strip()]
+    if full_name.strip():
+        query = query[query["ชื่อ-สกุล"].str.strip() == full_name.strip()]
+
+    if query.empty:
         st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
+    elif len(query) > 1:
+        st.warning("🔎 พบหลายรายการที่ตรงกัน กรุณาระบุให้ชัดเจนขึ้น")
+        st.dataframe(query)
+        st.stop()
     else:
-        st.session_state["person_data"] = result.iloc[0].to_dict()
+        st.session_state["person_data"] = query.iloc[0].to_dict()
 
 # ===============================
 # DISPLAY RESULTS
 # ===============================
 if "person_data" in st.session_state:
     person = st.session_state["person_data"]
-    st.success(f"✅ พบข้อมูลของ: {person['ชื่อ-สกุล']}")
-    st.markdown(f"**HN:** {person['HN']}  \n**เลขบัตรประชาชน:** {person['เลขบัตรประชาชน']}  \n**เพศ:** {person.get('เพศ', '-')}")
+    st.success(f"✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}")
+    st.markdown(f"**HN:** {person.get('HN', '-')}  \n**เลขบัตรประชาชน:** {person.get('เลขบัตรประชาชน', '-')}  \n**เพศ:** {person.get('เพศ', '-')}")
 
-    # ===============================
-    # สร้าง available_years_sorted: ปีที่มีข้อมูลของบุคคลนั้นจริง
-    # ===============================
-    available_years_sorted = []
+    # Optional: เพิ่มการแสดงผล BMI, BP, Waist ได้ถ้ามีในข้อมูล
+    weight = person.get("น้ำหนัก")
+    height = person.get("ส่วนสูง")
+    bmi = calc_bmi(weight, height)
+    sbp = person.get("SBP", 0)
+    dbp = person.get("DBP", 0)
+    waist = person.get("รอบเอว", 0)
 
-    for y in range(61, 69):  # ปรับช่วงปีตามข้อมูลของคุณ
-        urine_key = f"ผลปัสสาวะ{y}" if y < 68 else "ผลปัสสาวะ"
-        extra_fields = [
-            f"ผลเอกซเรย์{y}",
-            f"วัคซีน{y}",
-            f"ตรวจตา{y}"
-        ]
-
-        if any([
-            person.get(f"น้ำหนัก{y}"),
-            person.get(f"ส่วนสูง{y}"),
-            person.get(f"รอบเอว{y}"),
-            person.get(f"SBP{y}"),
-            person.get(f"DBP{y}"),
-            person.get(f"pulse{y}"),
-            person.get(urine_key),
-            *[person.get(field) for field in extra_fields]
-        ]):
-            available_years_sorted.append(y)
-
-    available_years_sorted = sorted(available_years_sorted)
-
-    # ถ้ามีข้อมูลปีใดปีหนึ่ง จึงแสดง selectbox และข้อมูลรายปี
-    if available_years_sorted:
-        year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
-        selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
-        selected_year = year_display[selected_label]
-
-        # ข้อมูลรายปี
-        weight = person.get(f"น้ำหนัก{selected_year}", "-")
-        height = person.get(f"ส่วนสูง{selected_year}", "-")
-        waist = person.get(f"รอบเอว{selected_year}", "-")
-        sbp = person.get(f"SBP{selected_year}", "-")
-        dbp = person.get(f"DBP{selected_year}", "-")
-        pulse = person.get(f"pulse{selected_year}", "-")
-        bmi = calc_bmi(weight, height)
-        bmi_text = f"{bmi:.1f}" if isinstance(bmi, (int, float)) else "-"
-
-        st.markdown("### 📋 ข้อมูลสุขภาพประจำปี")
-        st.markdown(f"""
-        - **ปี พ.ศ.**: 25{selected_year}  
-        - **น้ำหนัก:** {weight} กก.  
-        - **ส่วนสูง:** {height} ซม.  
-        - **รอบเอว:** {waist} ซม. ({assess_waist(waist)})  
-        - **BMI:** {bmi_text} ({interpret_bmi(bmi)})  
-        - **ความดันโลหิต:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})  
-        - **ชีพจร:** {pulse} ครั้ง/นาที
-        """)
-    else:
-        st.warning("ไม่พบข้อมูลสุขภาพรายปี")
-
-if "person_data" in st.session_state:
-    person = st.session_state["person_data"]
-
-    # ===============================
-    # สรุปผลสุขภาพรายปี
-    # ===============================
-    summary_data = {}
-    for y in available_years_sorted:
-        weight = person.get(f"น้ำหนัก{y}", "")
-        height = person.get(f"ส่วนสูง{y}", "")
-        waist = person.get(f"รอบเอว{y}", "")
-        bmi = calc_bmi(weight, height)
-        sbp = person.get(f"SBP{y}", "")
-        dbp = person.get(f"DBP{y}", "")
-        pulse = person.get(f"pulse{y}", "")
-
-        if not any([weight, height, waist, sbp, dbp, pulse]):
-            continue  # ข้ามปีที่ไม่มีข้อมูลเลย
-
-        summary_data[f"25{y}"] = {
-            "น้ำหนัก (กก.)": weight or "-",
-            "ส่วนสูง (ซม.)": height or "-",
-            "รอบเอว (ซม.)": waist or "-",
-            "BMI": bmi if bmi else "-",
-            "ความดัน": f"{sbp}/{dbp}" if sbp and dbp else "-",
-            "ชีพจร": pulse or "-"
-        }
-
-    if summary_data:
-        summary_df = pd.DataFrame(summary_data)
-        st.markdown("### 📊 สรุปผลสุขภาพรายปี")
-        st.dataframe(summary_df)
-
-    # ===============================
-    # กราฟแนวโน้ม BMI
-    # ===============================
-    st.markdown("### 📈 BMI Trend Over Years")
-
-    available_years_sorted = sorted(available_years_sorted)
-    bmi_values = [
-        calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-"))
-        for y in available_years_sorted
-    ]
-    years_labels = [f"25{y}" for y in available_years_sorted]
-    valid_bmi_values = [v for v in bmi_values if isinstance(v, (int, float))]
-
-    if valid_bmi_values:
-        fig, ax = plt.subplots(figsize=(8, 5))
-        ax.plot(years_labels, bmi_values, marker='o', linestyle='-', color='blue')
-        ax.axhspan(0, 18.5, facecolor='#66ccff', alpha=0.6, label='Underweight')
-        ax.axhspan(18.5, 23, facecolor='#66ff66', alpha=0.6, label='Normal')
-        ax.axhspan(23, 25, facecolor='#ffff66', alpha=0.6, label='Overweight')
-        ax.axhspan(25, 30, facecolor='#ff9933', alpha=0.6, label='Obese')
-        ax.axhspan(30, 100, facecolor='#ff6666', alpha=0.6, label='Severely Obese')
-        ax.set_title("BMI Trend")
-        ax.set_xlabel("Year (B.E.)")
-        ax.set_ylabel("BMI")
-        ax.set_ylim(bottom=15, top=max(valid_bmi_values + [30]) + 2)
-        ax.legend(loc='upper right')
-        st.pyplot(fig)
-    else:
-        st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟแนวโน้ม")
-        
-# ===============================
-# 💧 รายงานผลปัสสาวะประจำปี (ตามปีที่เลือก)
-# ===============================
-
-def translate_alb(value):
-    if value == "":
-        return "-"
-    v = value.lower()
-    if v == "negative":
-        return "ไม่พบโปรตีนในปัสสาวะ"
-    elif v in ["trace", "1+", "2+"]:
-        return "พบโปรตีนในปัสสาวะเล็กน้อย"
-    elif v == "3+":
-        return "พบโปรตีนในปัสสาวะ"
-    return "-"
-
-def translate_sugar(value):
-    if value == "":
-        return "-"
-    v = value.lower()
-    if v == "negative":
-        return "ไม่พบน้ำตาลในปัสสาวะ"
-    elif v == "trace":
-        return "พบน้ำตาลในปัสสาวะเล็กน้อย"
-    elif v in ["1+", "2+", "3+", "4+", "5+", "6+"]:
-        return "พบน้ำตาลในปัสสาวะ"
-    return "-"
-
-def translate_rbc(value):
-    if value == "":
-        return "-"
-    v = value.lower()
-    if v in ["negative", "0-1", "1-2", "2-3", "3-5"]:
-        return "ปกติ"
-    elif v in ["5-10", "10-20"]:
-        return "พบเม็ดเลือดแดงในปัสสาวะเล็กน้อย"
-    else:
-        return "พบเม็ดเลือดแดงในปัสสาวะ"
-
-def translate_wbc(value):
-    if value == "":
-        return "-"
-    v = value.lower()
-    if v in ["negative", "0-1", "1-2", "2-3", "3-5"]:
-        return "ปกติ"
-    elif v in ["5-10", "10-20"]:
-        return "พบเม็ดเลือดขาวในปัสสาวะเล็กน้อย"
-    else:
-        return "พบเม็ดเลือดขาวในปัสสาวะ"
-
-def urine_advice_interpret(sex, alb_text, sugar_text, rbc_text, wbc_text, urine_result):
-    if urine_result == "":
-        return ""
-
-    if urine_result == "ปัสสาวะปกติ":
-        return "ผลตรวจอยู่ในเกณฑ์ปกติ ควรดื่มน้ำให้เพียงพอ และตรวจสุขภาพประจำปีอย่างสม่ำเสมอ"
-
-    if "พบน้ำตาล" in sugar_text:
-        return "แนะนำตรวจน้ำตาลในเลือดเพื่อติดตามภาวะเบาหวาน"
-
-    if sex == "หญิง" and "พบเม็ดเลือดแดง" in rbc_text:
-        return "อาจมีประจำเดือนปน ควรตรวจซ้ำ หากผิดปกติให้พบแพทย์"
-
-    if sex == "ชาย" and "พบเม็ดเลือดแดง" in rbc_text:
-        return "อาจมีเลือดปนปัสสาวะ ควรตรวจซ้ำหรือตรวจเพิ่มเติมกับแพทย์"
-
-    if "พบเม็ดเลือดขาว" in wbc_text:
-        return "อาจมีการติดเชื้อทางเดินปัสสาวะ ดื่มน้ำมาก ๆ และไม่ควรกลั้นปัสสาวะ"
-
-    if urine_result == "ผลปัสสาวะผิดปกติ":
-        return "ควรตรวจปัสสาวะซ้ำ หากมีอาการควรพบแพทย์"
-
-    return ""
-
-# --- กำหนดฟิลด์ ---
-if selected_year == 68:
-    urine_key = "ผลปัสสาวะ"
-    alb_raw = person.get("Alb68", "").strip()
-    sugar_raw = person.get("sugar68", "").strip()
-    rbc_raw = person.get("RBC168", "").strip()
-    wbc_raw = person.get("WBC168", "").strip()
-else:
-    urine_key = f"ผลปัสสาวะ{selected_year}"
-    alb_raw = person.get(f"Alb{selected_year}", "").strip()
-    sugar_raw = person.get(f"sugar{selected_year}", "").strip()
-    rbc_raw = person.get(f"RBC1{selected_year}", "").strip()
-    wbc_raw = person.get(f"WBC1{selected_year}", "").strip()
-
-urine_result = person.get(urine_key, "").strip()
-
-# --- แปลผลย่อย ---
-alb_text = translate_alb(alb_raw)
-sugar_text = translate_sugar(sugar_raw)
-rbc_text = translate_rbc(rbc_raw)
-wbc_text = translate_wbc(wbc_raw)
-
-# --- สรุปผลอัตโนมัติ หากไม่มีค่า urine_result แต่พบค่าผิดปกติ ---
-if not urine_result:
-    abnormal_flags = [v for v in [alb_text, sugar_text, rbc_text, wbc_text] if v != "-" and "พบ" in v]
-    if abnormal_flags:
-        urine_result = "ผลปัสสาวะผิดปกติ"
-
-# --- แสดงผล ---
-if any([alb_raw, sugar_raw, rbc_raw, wbc_raw, urine_result]):
-    st.markdown(f"### 💧 ผลการตรวจปัสสาวะ ปี พ.ศ. 25{selected_year}")
-    st.markdown(f"- **สรุปผลรวม:** {urine_result if urine_result else '-'}")
-
-    st.markdown("#### รายละเอียด")
-    st.markdown(f"""
-    - **โปรตีนในปัสสาวะ:** {alb_raw or '-'} ({alb_text})
-    - **น้ำตาลในปัสสาวะ:** {sugar_raw or '-'} ({sugar_text})
-    - **เม็ดเลือดแดง:** {rbc_raw or '-'} ({rbc_text})
-    - **เม็ดเลือดขาว:** {wbc_raw or '-'} ({wbc_text})
-    """)
-
-    urine_advice = urine_advice_interpret(
-        sex=person.get("เพศ", ""),
-        alb_text=alb_text,
-        sugar_text=sugar_text,
-        rbc_text=rbc_text,
-        wbc_text=wbc_text,
-        urine_result=urine_result
-    )
-
-    if urine_advice:
-        st.warning(f"📌 คำแนะนำ: {urine_advice}")
+    st.markdown("### 📊 ผลประเมินสุขภาพ")
+    st.write(f"**BMI:** {bmi} ({interpret_bmi(bmi)})")
+    st.write(f"**ความดันโลหิต:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})")
+    st.write(f"**รอบเอว:** {waist} ซม. ({assess_waist(waist)})")
