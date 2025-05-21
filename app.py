@@ -151,7 +151,7 @@ if "person" in st.session_state:
 
 
     for y in sorted(years):
-        cols = columns_by_year[y]
+        cols = columns_by_year[y]  # ✅ ต้องมี
         weight = person.get(cols["weight"], "")
         height = person.get(cols["height"], "")
         waist = person.get(cols["waist"], "")
