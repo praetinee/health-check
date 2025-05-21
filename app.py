@@ -123,10 +123,17 @@ if submitted:
 # ===============================
 if "person" in st.session_state:
     person = st.session_state["person"]
-    st.success(f"✅ พบข้อมูลของ: **{person.get('ชื่อ-สกุล', '-')}**")
+# แสดงชื่อและข้อมูลผู้ป่วยแบบตัวใหญ่
+    st.markdown(f"<h3 style='margin-bottom: 0;'>✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}</h3>", unsafe_allow_html=True)
+
     st.markdown(f"""
-        🆔 {person.get('เลขบัตรประชาชน', '-')} | HN: {person.get('HN', '-')} | เพศ: {person.get('เพศ', '-')}
-    """)
+    <h3 style='color: #333; margin-top: 0.5rem;'>
+    เลขบัตรประชาชน: {person.get('เลขบัตรประชาชน', '-')} &nbsp;&nbsp;&nbsp;&nbsp;
+    HN: {person.get('HN', '-')} &nbsp;&nbsp;&nbsp;&nbsp;
+    เพศ: {person.get('เพศ', '-')}
+    </h3>
+    """, unsafe_allow_html=True)
+
 
     selected_year = st.selectbox("เลือกปี พ.ศ.", sorted([y + 2500 for y in years], reverse=True))
     year = selected_year - 2500
@@ -140,47 +147,63 @@ if "person" in st.session_state:
     pulse = person.get(cols["pulse"], "")
     bmi = person.get(cols["bmi_value"], "")
 
-    st.markdown(f"### 📊 ผลตรวจสุขภาพ ปี {selected_year}")
-    st.write(f"- น้ำหนัก: {weight} กก.")
-    st.write(f"- ส่วนสูง: {height} ซม.")
-    st.write(f"- รอบเอว: {waist} ซม. ({interpret_waist(waist, height)})")
-    st.write(f"- BMI: {bmi} ({interpret_bmi(bmi)})")
-    st.write(f"- ความดัน: {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})")
-    st.write(f"- ชีพจร: {pulse} ครั้ง/นาที")
+    st.markdown("### 📊 น้ำหนัก / รอบเอว / ความดัน")
+
+    # สร้าง DataFrame แสดงผลตรวจรายปี
+    table_data = {
+        "ปี พ.ศ.": [],
+        "น้ำหนัก (กก.)": [],
+        "รอบเอว (ซม.)": [],
+        "ความดัน (mmHg)": [],
+        "BMI (แปลผล)": []
+    }
+
+    for y in sorted(years):
+        cols = columns_by_year[y]
+        weight = person.get(cols["weight"], "")
+        waist = person.get(cols["waist"], "")
+        sbp = person.get(cols["sbp"], "")
+        dbp = person.get(cols["dbp"], "")
+        bmi = person.get(cols["bmi_value"], "")
+
+        try:
+            bmi_str = f"{bmi} ({interpret_bmi(bmi)})" if bmi else "-"
+        except:
+            bmi_str = "-"
+
+        bp_str = f"{sbp}/{dbp}" if sbp or dbp else "-"
+
+        table_data["ปี พ.ศ."].append(y + 2500)
+        table_data["น้ำหนัก (กก.)"].append(weight if weight else "-")
+        table_data["รอบเอว (ซม.)"].append(waist if waist else "-")
+        table_data["ความดัน (mmHg)"].append(bp_str)
+        table_data["BMI (แปลผล)"].append(bmi_str)
+
+    st.dataframe(pd.DataFrame(table_data).set_index("ปี พ.ศ.").T)
 
     # ==========================
     # GRAPH: BMI + Waist History
     # ==========================
-    bmi_data = []
-    waist_data = []
-    labels = []
-
-    for y in sorted(years):
-        col = columns_by_year[y]
-        try:
-            bmi_val = float(person.get(col["bmi_value"], 0))
-            waist_val = float(person.get(col["waist"], 0))
-            if bmi_val > 0:
-                bmi_data.append(bmi_val)
-                waist_data.append(waist_val)
-                labels.append(f"B.E. {y + 2500}")
-        except:
-            continue
-
     if bmi_data:
         st.markdown("### 📈 BMI Trend")
-        fig, ax = plt.subplots()
-        ax.plot(labels, bmi_data, marker='o', label="BMI")
-        ax.set_ylabel("BMI")
-        ax.set_title("BMI Over Time")
-        ax.legend()
-        st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(10, 4))
 
-    if waist_data:
-        st.markdown("### 📈 Waist Circumference Trend")
-        fig, ax = plt.subplots()
-        ax.plot(labels, waist_data, marker='o', label="Waist (cm)")
-        ax.set_ylabel("Waist (cm)")
-        ax.set_title("Waist Circumference Over Time")
-        ax.legend()
+        # โซนสีพื้นหลัง
+        ax.axhspan(0, 18.5, facecolor='#D0E6F7', alpha=0.4, label='Underweight')
+        ax.axhspan(18.5, 23, facecolor='#B7F7C6', alpha=0.4, label='Normal')
+        ax.axhspan(23, 25, facecolor='#FFFACD', alpha=0.4, label='Overweight')
+        ax.axhspan(25, 30, facecolor='#FFD580', alpha=0.4, label='Obese')
+        ax.axhspan(30, 40, facecolor='#FFA07A', alpha=0.4, label='Severely Obese')
+
+        # เส้นกราฟ
+        ax.plot(labels, bmi_data, marker='o', color='black', label="BMI")
+
+        # ตกแต่งแกน
+        ax.set_xticks(np.arange(len(labels)))
+        ax.set_xticklabels(labels)
+        ax.set_ylabel("BMI")
+        ax.set_ylim(15, 40)
+        ax.set_title("BMI Over Time")
+        ax.legend(loc="upper left")
+
         st.pyplot(fig)
