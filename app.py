@@ -126,7 +126,8 @@ if "person" in st.session_state:
     person = st.session_state["person"]
 
     # ✅ แสดงชื่อคนไข้ ด้วยแถบเขียว และขนาดใหญ่
-    st.success(f"""<span style='font-size: 20px;'>✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}</span>""", unsafe_allow_html=True)
+    # ✅ ปลอดภัย ไม่ทำให้ error
+    st.success(f"✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}")
 
     # ✅ แสดงเลขบัตร / HN / เพศ ด้วยสีขาว (เพื่อ contrast กับพื้นเข้ม)
     st.markdown(f"""
