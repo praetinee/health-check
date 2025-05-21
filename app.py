@@ -151,20 +151,37 @@ if "person_data" in st.session_state:
     """)
 
 # ===============================
-# สร้าง available_years เฉพาะปีที่มีข้อมูลจริง
+# สร้าง available_years: ปีที่มีข้อมูลของบุคคลนั้นจริง
 # ===============================
+
 available_years = []
-for y in range(61, 69):
+
+MAX_YEAR = 80
+for y in range(61, MAX_YEAR):  # ปรับช่วงปีตามข้อมูลในระบบ
     urine_key = f"ผลปัสสาวะ{y}" if y < 68 else "ผลปัสสาวะ"
+
+    # รองรับรายการตรวจเพิ่มเติมในอนาคต เช่น x-ray, วัคซีน, ตา
+    extra_fields = [
+        f"ผลเอกซเรย์{y}",
+        f"วัคซีน{y}",
+        f"ตรวจตา{y}",
+        f"ผลตรวจอื่น{y}"
+    ]
+
     if any([
-        person.get(f"น้ำหนัก{y}"), person.get(f"ส่วนสูง{y}"),
-        person.get(f"รอบเอว{y}"), person.get(f"SBP{y}"),
-        person.get(f"DBP{y}"), person.get(f"pulse{y}"),
-        person.get(urine_key)
+        person.get(f"น้ำหนัก{y}"),
+        person.get(f"ส่วนสูง{y}"),
+        person.get(f"รอบเอว{y}"),
+        person.get(f"SBP{y}"),
+        person.get(f"DBP{y}"),
+        person.get(f"pulse{y}"),
+        person.get(urine_key),
+        *[person.get(field) for field in extra_fields]
     ]):
         available_years.append(y)
 
 available_years_sorted = sorted(available_years)
+
 
 # ===============================
 # สรุปผลสุขภาพรายปี
@@ -243,10 +260,10 @@ else:
 urine_key = f"ผลปัสสาวะ{selected_year}" if selected_year < 68 else "ผลปัสสาวะ"
 urine_result = person.get(urine_key, "").strip()
 
-alb_raw = person.get("Alb", "").strip()
-sugar_raw = person.get("sugar", "").strip()
-rbc_raw = person.get("RBC1", "").strip()
-wbc_raw = person.get("WBC1", "").strip()
+alb_raw = person.get(f"Alb{selected_year}", "").strip()
+sugar_raw = person.get(f"sugar{selected_year}", "").strip()
+rbc_raw = person.get(f"RBC1{selected_year}", "").strip()
+wbc_raw = person.get(f"WBC1{selected_year}", "").strip()
 
 # === ฟังก์ชันแปลผล ===
 def translate_alb(value):
@@ -325,6 +342,11 @@ alb_text = translate_alb(alb_raw)
 sugar_text = translate_sugar(sugar_raw)
 rbc_text = translate_rbc(rbc_raw)
 wbc_text = translate_wbc(wbc_raw)
+
+# === ถ้ายังไม่มี urine_result แต่ผลย่อยผิดปกติ ให้ใส่อัตโนมัติ
+if not urine_result:
+    if any("พบ" in val for val in [alb_text, sugar_text, rbc_text, wbc_text]):
+        urine_result = "ผลปัสสาวะผิดปกติ"
 
 # === แสดงผล ===
 if urine_result or alb_raw or sugar_raw or rbc_raw or wbc_raw:
