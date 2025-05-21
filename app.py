@@ -156,10 +156,9 @@ if "person_data" in st.session_state:
 
 available_years_sorted = []
 
-for y in range(61, 69):  # สามารถเปลี่ยนเป็น range(61, 80) หากต้องการรองรับอนาคต
+for y in range(61, 69):  # หรือ range(61, 80) เพื่อรองรับอนาคต
     urine_key = f"ผลปัสสาวะ{y}" if y < 68 else "ผลปัสสาวะ"
 
-    # รายการตรวจเพิ่มเติมในอนาคต เช่น X-ray, วัคซีน, ตรวจตา
     extra_fields = [
         f"ผลเอกซเรย์{y}",
         f"วัคซีน{y}",
@@ -167,7 +166,6 @@ for y in range(61, 69):  # สามารถเปลี่ยนเป็น r
         f"ผลตรวจอื่น{y}"
     ]
 
-    # ตรวจว่าปีนี้มีข้อมูลใด ๆ หรือไม่
     if any([
         person.get(f"น้ำหนัก{y}"),
         person.get(f"ส่วนสูง{y}"),
@@ -180,7 +178,7 @@ for y in range(61, 69):  # สามารถเปลี่ยนเป็น r
     ]):
         available_years_sorted.append(y)
 
-# เรียงจากน้อยไปมาก
+# จัดเรียงจากน้อยไปมาก
 available_years_sorted = sorted(available_years_sorted)
 
 # ===============================
