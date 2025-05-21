@@ -28,7 +28,21 @@ client = gspread.authorize(creds)
 sheet_url = "https://docs.google.com/spreadsheets/d/1N3l0o_Y6QYbGKx22323mNLPym77N0jkJfyxXFM2BDmc"
 worksheet = client.open_by_url(sheet_url).sheet1
 df = pd.DataFrame(worksheet.get_all_records())
+# ทำความสะอาดข้อมูลจาก Google Sheets
 df.columns = df.columns.str.strip()
+df['เลขบัตรประชาชน'] = df['เลขบัตรประชาชน'].astype(str).str.strip()
+df['HN'] = df['HN'].astype(str).str.strip()
+df['ชื่อ-สกุล'] = df['ชื่อ-สกุล'].astype(str).str.strip()
+
+# ค้นหา
+if submitted:
+    query = df.copy()
+    if id_card.strip():
+        query = query[query["เลขบัตรประชาชน"] == id_card.strip()]
+    if hn.strip():
+        query = query[query["HN"] == hn.strip()]
+    if full_name.strip():
+        query = query[query["ชื่อ-สกุล"].str.strip() == full_name.strip()]
 
 # ===============================
 # YEAR MAPPING
