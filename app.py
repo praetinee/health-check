@@ -157,15 +157,17 @@ if "person" in st.session_state:
         waist = person.get(cols["waist"], "")
         sbp = person.get(cols["sbp"], "")
         dbp = person.get(cols["dbp"], "")
-        bmi = person.get(cols["bmi_value"], "")
 
-        # ✅ แปลผล BMI
+        # ✅ คำนวณ BMI จากน้ำหนักและส่วนสูง
         try:
-            bmi_str = f"{bmi} ({interpret_bmi(bmi)})" if bmi else "-"
+            bmi_val = float(weight) / ((float(height) / 100) ** 2)
+            bmi_val = round(bmi_val, 1)
+            bmi_str = f"{bmi_val}<br><span style='font-size: 13px; color: gray;'>{interpret_bmi(bmi_val)}</span>"
         except:
+            bmi_val = None
             bmi_str = "-"
 
-        # ✅ แปลผลความดัน พร้อมขึ้นบรรทัดใหม่ใน HTML
+        # ✅ แปลผลความดัน
         try:
             if sbp or dbp:
                 bp_val = f"{sbp}/{dbp}"
@@ -176,7 +178,7 @@ if "person" in st.session_state:
         except:
             bp_str = "-"
 
-        # ✅ ใส่ข้อมูลลงใน dictionary
+        # ✅ เติมข้อมูลลงตาราง
         table_data["ปี พ.ศ."].append(y + 2500)
         table_data["น้ำหนัก (กก.)"].append(weight if weight else "-")
         table_data["ส่วนสูง (ซม.)"].append(height if height else "-")
