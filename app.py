@@ -199,7 +199,8 @@ bmi_data = []
 labels = []
 
 for y in sorted(years):
-    cols = columns_by_year[y]
+    cols = columns_by_year[y]  # ✅ ต้องมีตรงนี้ก่อนใช้ cols
+
     weight = person.get(cols["weight"], "")
     height = person.get(cols["height"], "")
     
