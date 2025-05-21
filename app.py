@@ -118,8 +118,9 @@ with st.form("search_form"):
     id_card = col1.text_input("เลขบัตรประชาชน")
     hn = col2.text_input("HN")
     full_name = col3.text_input("ชื่อ-สกุล")
-    submitted = st.form_submit_button("ค้นหา")
+    submitted = st.form_submit_button("ค้นหา")  # ✅ สร้างตัวแปร submitted ตรงนี้
 
+# ✅ ใช้ได้แล้ว เพราะฟอร์มเสร็จแล้ว
 if submitted:
     query = df.copy()
     if id_card.strip():
@@ -133,6 +134,7 @@ if submitted:
         st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
     else:
         st.session_state["person"] = query.iloc[0]
+
 
 # ===============================
 # DISPLAY
