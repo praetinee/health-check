@@ -125,15 +125,17 @@ if "person_data" in st.session_state:
     st.success(f"✅ พบข้อมูลของ: {person['ชื่อ-สกุล']}")
     st.markdown(f"**HN:** {person['HN']}  \n**เลขบัตรประชาชน:** {person['เลขบัตรประชาชน']}  \n**เพศ:** {person.get('เพศ', '-')}")
 
-    # ======= สร้าง available_years_sorted ก่อนใช้งาน ========
+    # ===============================
+    # สร้าง available_years_sorted: ปีที่มีข้อมูลของบุคคลนั้นจริง
+    # ===============================
     available_years_sorted = []
 
-    for y in range(61, 69):  # หรือ range(61, 80) เพื่ออนาคต
+    for y in range(61, 69):  # ปรับช่วงปีตามข้อมูลของคุณ
         urine_key = f"ผลปัสสาวะ{y}" if y < 68 else "ผลปัสสาวะ"
         extra_fields = [
             f"ผลเอกซเรย์{y}",
             f"วัคซีน{y}",
-            f"ตรวจตา{y}",
+            f"ตรวจตา{y}"
         ]
 
         if any([
@@ -150,36 +152,34 @@ if "person_data" in st.session_state:
 
     available_years_sorted = sorted(available_years_sorted)
 
-    # ======= ค่อยใช้ใน selectbox หลังจากคำนวณแล้ว ========
-    year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
-    selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
-    selected_year = year_display[selected_label]
+    # ถ้ามีข้อมูลปีใดปีหนึ่ง จึงแสดง selectbox และข้อมูลรายปี
+    if available_years_sorted:
+        year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
+        selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
+        selected_year = year_display[selected_label]
 
-    # จากนี้ลงไปคุณสามารถใช้ selected_year ได้อย่างปลอดภัย ✅
-    year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
-    selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
-    selected_year = year_display[selected_label]
+        # ข้อมูลรายปี
+        weight = person.get(f"น้ำหนัก{selected_year}", "-")
+        height = person.get(f"ส่วนสูง{selected_year}", "-")
+        waist = person.get(f"รอบเอว{selected_year}", "-")
+        sbp = person.get(f"SBP{selected_year}", "-")
+        dbp = person.get(f"DBP{selected_year}", "-")
+        pulse = person.get(f"pulse{selected_year}", "-")
+        bmi = calc_bmi(weight, height)
+        bmi_text = f"{bmi:.1f}" if isinstance(bmi, (int, float)) else "-"
 
-    # ข้อมูลรายปี
-    weight = person.get(f"น้ำหนัก{selected_year}", "-")
-    height = person.get(f"ส่วนสูง{selected_year}", "-")
-    waist = person.get(f"รอบเอว{selected_year}", "-")
-    sbp = person.get(f"SBP{selected_year}", "-")
-    dbp = person.get(f"DBP{selected_year}", "-")
-    pulse = person.get(f"pulse{selected_year}", "-")
-    bmi = calc_bmi(weight, height)
-    bmi_text = f"{bmi:.1f}" if isinstance(bmi, (int, float)) else "-"
-
-    st.markdown("### 📋 ข้อมูลสุขภาพประจำปี")
-    st.markdown(f"""
-    - **ปี พ.ศ.**: 25{selected_year}  
-    - **น้ำหนัก:** {weight} กก.  
-    - **ส่วนสูง:** {height} ซม.  
-    - **รอบเอว:** {waist} ซม. ({assess_waist(waist)})  
-    - **BMI:** {bmi_text} ({interpret_bmi(bmi)})  
-    - **ความดันโลหิต:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})  
-    - **ชีพจร:** {pulse} ครั้ง/นาที
-    """)
+        st.markdown("### 📋 ข้อมูลสุขภาพประจำปี")
+        st.markdown(f"""
+        - **ปี พ.ศ.**: 25{selected_year}  
+        - **น้ำหนัก:** {weight} กก.  
+        - **ส่วนสูง:** {height} ซม.  
+        - **รอบเอว:** {waist} ซม. ({assess_waist(waist)})  
+        - **BMI:** {bmi_text} ({interpret_bmi(bmi)})  
+        - **ความดันโลหิต:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})  
+        - **ชีพจร:** {pulse} ครั้ง/นาที
+        """)
+    else:
+        st.warning("ไม่พบข้อมูลสุขภาพรายปี")
 
 # ===============================
 # สรุปผลสุขภาพรายปี
