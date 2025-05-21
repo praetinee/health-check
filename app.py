@@ -283,7 +283,7 @@ if "person" in st.session_state:
     def interpret_rbc(value):
         if value == "":
             return "-"
-        if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
+        if value in ["0-1", "Negative", "1-2", "2-3", "3-5"]:
             return "ปกติ"
         elif value in ["5-10", "10-20"]:
             return "พบเม็ดเลือดแดงในปัสสาวะเล็กน้อย"
@@ -293,7 +293,7 @@ if "person" in st.session_state:
     def interpret_wbc(value):
         if value == "":
             return "-"
-        if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
+        if value in ["0-1", "Negative", "1-2", "2-3", "3-5"]:
             return "ปกติ"
         elif value in ["5-10", "10-20"]:
             return "พบเม็ดเลือดขาวในปัสสาวะเล็กน้อย"
