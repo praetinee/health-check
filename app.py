@@ -253,86 +253,86 @@ if "person" in st.session_state:
     else:
         st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
 
-# ===============================
-# DISPLAY: URINE TEST BY YEAR
-# ===============================
+    # ===============================
+    # DISPLAY: URINE TEST BY YEAR
+    # ===============================
 
-# ฟังก์ชันแปลผล
-def interpret_alb(value):
-    if value == "":
+    # ฟังก์ชันแปลผล
+    def interpret_alb(value):
+        if value == "":
+            return "-"
+        if value == "negative":
+            return "ไม่พบโปรตีนในปัสสาวะ"
+        elif value in ["trace", "1+", "2+"]:
+            return "พบโปรตีนในปัสสาวะเล็กน้อย"
+        elif value == "3+":
+            return "พบโปรตีนในปัสสาวะ"
         return "-"
-    if value == "negative":
-        return "ไม่พบโปรตีนในปัสสาวะ"
-    elif value in ["trace", "1+", "2+"]:
-        return "พบโปรตีนในปัสสาวะเล็กน้อย"
-    elif value == "3+":
-        return "พบโปรตีนในปัสสาวะ"
-    return "-"
 
-def interpret_sugar(value):
-    if value == "":
+    def interpret_sugar(value):
+        if value == "":
+            return "-"
+        if value == "negative":
+            return "ไม่พบน้ำตาลในปัสสาวะ"
+        elif value == "trace":
+            return "พบน้ำตาลในปัสสาวะเล็กน้อย"
+        elif value in ["1+", "2+", "3+", "4+", "5+", "6+"]:
+            return "พบน้ำตาลในปัสสาวะ"
         return "-"
-    if value == "negative":
-        return "ไม่พบน้ำตาลในปัสสาวะ"
-    elif value == "trace":
-        return "พบน้ำตาลในปัสสาวะเล็กน้อย"
-    elif value in ["1+", "2+", "3+", "4+", "5+", "6+"]:
-        return "พบน้ำตาลในปัสสาวะ"
-    return "-"
 
-def interpret_rbc(value):
-    if value == "":
-        return "-"
-    if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
-        return "เม็ดเลือดแดงในปัสสาวะปกติ"
-    elif value in ["5-10", "10-20"]:
-        return "พบเม็ดเลือดแดงในปัสสาวะเล็กน้อย"
-    else:
-        return "พบเม็ดเลือดแดงในปัสสาวะ"
+    def interpret_rbc(value):
+        if value == "":
+            return "-"
+        if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
+            return "ปกติ"
+        elif value in ["5-10", "10-20"]:
+            return "พบเม็ดเลือดแดงในปัสสาวะเล็กน้อย"
+        else:
+            return "พบเม็ดเลือดแดงในปัสสาวะ"
 
-def interpret_wbc(value):
-    if value == "":
-        return "-"
-    if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
-        return "เม็ดเลือดขาวในปัสสาวะปกติ"
-    elif value in ["5-10", "10-20"]:
-        return "พบเม็ดเลือดขาวในปัสสาวะเล็กน้อย"
-    else:
-        return "พบเม็ดเลือดขาวในปัสสาวะ"
+    def interpret_wbc(value):
+        if value == "":
+            return "-"
+        if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
+            return "ปกติ"
+        elif value in ["5-10", "10-20"]:
+            return "พบเม็ดเลือดขาวในปัสสาวะเล็กน้อย"
+        else:
+            return "พบเม็ดเลือดขาวในปัสสาวะ"
 
-# ตารางผลตรวจปัสสาวะ
-urine_table = {
-    "ปี พ.ศ.": [],
-    "โปรตีน": [],
-    "น้ำตาล": [],
-    "เม็ดเลือดแดง": [],
-    "เม็ดเลือดขาว": []
-}
+    # ตารางผลตรวจปัสสาวะ
+    urine_table = {
+        "ปี พ.ศ.": [],
+        "โปรตีน": [],
+        "น้ำตาล": [],
+        "เม็ดเลือดแดง": [],
+        "เม็ดเลือดขาว": []
+    }
 
-for y in years:
-    year_label = str(y) if y != 68 else ""  # ปี 68 ไม่มีเลขท้าย
-    alb_col = f"Alb{year_label}"
-    sugar_col = f"sugar{year_label}"
-    rbc_col = f"RBC1{year_label}"
-    wbc_col = f"WBC1{year_label}"
+    for y in years:
+        year_label = str(y) if y != 68 else ""  # ปี 68 ไม่มีเลขท้าย
+        alb_col = f"Alb{year_label}"
+        sugar_col = f"sugar{year_label}"
+        rbc_col = f"RBC1{year_label}"
+        wbc_col = f"WBC1{year_label}"
 
-    alb = person.get(alb_col, "")
-    sugar = person.get(sugar_col, "")
-    rbc = person.get(rbc_col, "")
-    wbc = person.get(wbc_col, "")
+        alb = person.get(alb_col, "")
+        sugar = person.get(sugar_col, "")
+        rbc = person.get(rbc_col, "")
+        wbc = person.get(wbc_col, "")
 
-    alb_result = f"{alb}<br><span style='font-size: 13px; color: gray;'>{interpret_alb(alb)}</span>" if alb else "-"
-    sugar_result = f"{sugar}<br><span style='font-size: 13px; color: gray;'>{interpret_sugar(sugar)}</span>" if sugar else "-"
-    rbc_result = f"{rbc}<br><span style='font-size: 13px; color: gray;'>{interpret_rbc(rbc)}</span>" if rbc else "-"
-    wbc_result = f"{wbc}<br><span style='font-size: 13px; color: gray;'>{interpret_wbc(wbc)}</span>" if wbc else "-"
+        alb_result = f"{alb}<br><span style='font-size: 13px; color: gray;'>{interpret_alb(alb)}</span>" if alb else "-"
+        sugar_result = f"{sugar}<br><span style='font-size: 13px; color: gray;'>{interpret_sugar(sugar)}</span>" if sugar else "-"
+        rbc_result = f"{rbc}<br><span style='font-size: 13px; color: gray;'>{interpret_rbc(rbc)}</span>" if rbc else "-"
+        wbc_result = f"{wbc}<br><span style='font-size: 13px; color: gray;'>{interpret_wbc(wbc)}</span>" if wbc else "-"
 
-    urine_table["ปี พ.ศ."].append(y + 2500)
-    urine_table["โปรตีน"].append(alb_result)
-    urine_table["น้ำตาล"].append(sugar_result)
-    urine_table["เม็ดเลือดแดง"].append(rbc_result)
-    urine_table["เม็ดเลือดขาว"].append(wbc_result)
+        urine_table["ปี พ.ศ."].append(y + 2500)
+        urine_table["โปรตีน"].append(alb_result)
+        urine_table["น้ำตาล"].append(sugar_result)
+        urine_table["เม็ดเลือดแดง"].append(rbc_result)
+        urine_table["เม็ดเลือดขาว"].append(wbc_result)
 
-# แสดงผล
-st.markdown("### 🚽 ผลตรวจปัสสาวะ (ปี 61–68)")
-urine_df = pd.DataFrame(urine_table).set_index("ปี พ.ศ.").T
-st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
+    # แสดงผล
+    st.markdown("### 🚽 ผลตรวจปัสสาวะ (ปี 61–68)")
+    urine_df = pd.DataFrame(urine_table).set_index("ปี พ.ศ.").T
+    st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
