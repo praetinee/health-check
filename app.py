@@ -198,9 +198,8 @@ if "person" in st.session_state:
 bmi_data = []
 labels = []
 
-# ✅ ต้องวนลูปแบบนี้ และใส่ cols = columns_by_year[y] ด้านใน
 for y in sorted(years):
-    cols = columns_by_year[y]  # ✅ ประกาศ cols ก่อนใช้งานทุกครั้ง
+    cols = columns_by_year[y]  # ✅ ต้องอยู่ในลูปเท่านั้น!
 
     weight = person.get(cols["weight"], "")
     height = person.get(cols["height"], "")
@@ -215,22 +214,17 @@ for y in sorted(years):
     except:
         continue
 
-# ✅ วาดกราฟ BMI หากมีข้อมูล
 if bmi_data and labels:
     st.markdown("### 📈 BMI Trend")
     fig, ax = plt.subplots(figsize=(10, 4))
 
-    # โซนสีพื้นหลังสำหรับช่วง BMI
     ax.axhspan(0, 18.5, facecolor='#3366CC', alpha=0.3, label='Underweight')
     ax.axhspan(18.5, 23, facecolor='#109618', alpha=0.3, label='Normal')
     ax.axhspan(23, 25, facecolor='#FF9900', alpha=0.3, label='Overweight')
     ax.axhspan(25, 30, facecolor='#FF5722', alpha=0.3, label='Obese')
     ax.axhspan(30, 40, facecolor='#D32F2F', alpha=0.3, label='Severely Obese')
 
-    # วาดเส้นกราฟ
     ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', linewidth=2, label='BMI')
-
-    # ตั้งค่าแกน
     ax.set_xticks(np.arange(len(labels)))
     ax.set_xticklabels(labels)
     ax.set_ylabel("BMI", fontsize=12)
