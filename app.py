@@ -213,28 +213,24 @@ for y in sorted(years):
         continue
 
     # ✅ วาดกราฟถ้ามีข้อมูล
-    if bmi_data and labels:
-        st.markdown("### 📈 BMI Trend")
-        fig, ax = plt.subplots(figsize=(10, 4))
+if bmi_data and labels:
+    st.markdown("### 📈 BMI Trend")
+    fig, ax = plt.subplots(figsize=(10, 4))
 
-        # 🔵 โซนสีแบ่งระดับ BMI (ใช้สีเข้ม)
-        ax.axhspan(0, 18.5, facecolor='#4285F4', alpha=0.3, label='Underweight')
-        ax.axhspan(18.5, 23, facecolor='#34A853', alpha=0.3, label='Normal')
-        ax.axhspan(23, 25, facecolor='#FBBC05', alpha=0.4, label='Overweight')
-        ax.axhspan(25, 30, facecolor='#FF8800', alpha=0.4, label='Obese')
-        ax.axhspan(30, 40, facecolor='#EA4335', alpha=0.4, label='Severely Obese')
+    ax.axhspan(0, 18.5, facecolor='#4285F4', alpha=0.3, label='Underweight')
+    ax.axhspan(18.5, 23, facecolor='#34A853', alpha=0.3, label='Normal')
+    ax.axhspan(23, 25, facecolor='#FBBC05', alpha=0.4, label='Overweight')
+    ax.axhspan(25, 30, facecolor='#FF8800', alpha=0.4, label='Obese')
+    ax.axhspan(30, 40, facecolor='#EA4335', alpha=0.4, label='Severely Obese')
 
-        # 📈 วาดเส้นกราฟ BMI
-        ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', label="BMI")
+    ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', label="BMI")
+    ax.set_xticks(np.arange(len(labels)))
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("BMI")
+    ax.set_ylim(15, 40)
+    ax.set_title("BMI Over Time")
+    ax.legend(loc="upper left")
 
-        # 🎯 ตกแต่งกราฟ
-        ax.set_xticks(np.arange(len(labels)))
-        ax.set_xticklabels(labels)
-        ax.set_ylabel("BMI")
-        ax.set_ylim(15, 40)
-        ax.set_title("BMI Over Time")
-        ax.legend(loc="upper left")
-
-        st.pyplot(fig)
-    else:
-        st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
+    st.pyplot(fig)
+else:
+    st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
