@@ -202,8 +202,8 @@ labels = []
 for y in sorted(years):
     cols = columns_by_year[y]  # ✅ ประกาศ cols ก่อนใช้งานทุกครั้ง
 
-        weight = person.get(cols["weight"], "")
-        height = person.get(cols["height"], "")
+    weight = person.get(cols["weight"], "")
+    height = person.get(cols["height"], "")
 
     try:
         weight = float(weight)
