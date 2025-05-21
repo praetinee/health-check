@@ -327,10 +327,10 @@ if "person" in st.session_state:
         wbc_result = f"{wbc}<br><span style='font-size: 13px; color: gray;'>{interpret_wbc(wbc)}</span>" if wbc else "-"
 
         urine_table["ปี พ.ศ."].append(y + 2500)
-        urine_table["โปรตีน"].append(alb_result)
-        urine_table["น้ำตาล"].append(sugar_result)
-        urine_table["เม็ดเลือดแดง"].append(rbc_result)
-        urine_table["เม็ดเลือดขาว"].append(wbc_result)
+        urine_table["โปรตีนในปัสสาวะ"].append(alb_result)
+        urine_table["น้ำตาลในปัสสาวะ"].append(sugar_result)
+        urine_table["เม็ดเลือดแดงในปัสสาวะ"].append(rbc_result)
+        urine_table["เม็ดเลือดขาวในปัสสาวะ"].append(wbc_result)
 
     # แสดงผล
     st.markdown("### 🚽 ผลตรวจปัสสาวะ (ปี 61–68)")
