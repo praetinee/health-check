@@ -16,7 +16,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ===============================
-# LOAD GOOGLE SHEETS
+# CONNECT GOOGLE SHEET
 # ===============================
 service_account_info = json.loads(st.secrets["GCP_SERVICE_ACCOUNT"])
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -24,44 +24,55 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(service_account_info, s
 client = gspread.authorize(creds)
 
 sheet_url = "https://docs.google.com/spreadsheets/d/1N3l0o_Y6QYbGKx22323mNLPym77N0jkJfyxXFM2BDmc"
-spreadsheet = client.open_by_url(sheet_url)
-worksheet = spreadsheet.sheet1
+worksheet = client.open_by_url(sheet_url).sheet1
 df = pd.DataFrame(worksheet.get_all_records())
 df.columns = df.columns.str.strip()
 
-required_columns = ['เลขบัตรประชาชน', 'HN', 'ชื่อ-สกุล']
-if not all(col in df.columns for col in required_columns):
-    st.error("❌ โครงสร้างข้อมูลผิด กรุณาตรวจสอบ Google Sheet")
-    st.stop()
-
-df['เลขบัตรประชาชน'] = df['เลขบัตรประชาชน'].astype(str)
-df['HN'] = df['HN'].astype(str)
-df['ชื่อ-สกุล'] = df['ชื่อ-สกุล'].astype(str)
+# ===============================
+# YEAR MAPPING
+# ===============================
+years = list(range(61, 69))
+columns_by_year = {
+    year: {
+        "weight": f"น้ำหนัก{year}" if year != 68 else "น้ำหนัก",
+        "height": f"ส่วนสูง{year}" if year != 68 else "ส่วนสูง",
+        "waist": f"รอบเอว{year}" if year != 68 else "รอบเอว",
+        "sbp": f"SBP{year}" if year != 68 else "SBP",
+        "dbp": f"DBP{year}" if year != 68 else "DBP",
+        "pulse": f"pulse{year}" if year != 68 else "pulse",
+        "bmi_value": f"BMI{year}" if year != 68 else "ดัชนีมวลกาย",
+    }
+    for year in years
+}
 
 # ===============================
 # FUNCTIONS
 # ===============================
-def calc_bmi(weight, height):
-    try:
-        weight = float(weight)
-        height = float(height)
-        return round(weight / ((height / 100) ** 2), 1)
-    except (ValueError, TypeError):
-        return None
-
 def interpret_bmi(bmi):
-    if bmi is None:
+    if bmi is None or bmi == "":
         return "-"
-    if bmi > 30:
-        return "อ้วนมาก"
-    elif bmi >= 25:
-        return "อ้วน"
-    elif bmi >= 23:
-        return "น้ำหนักเกิน"
-    elif bmi >= 18.5:
-        return "ปกติ"
-    else:
-        return "ผอม"
+    try:
+        bmi = float(bmi)
+        if bmi > 30:
+            return "อ้วนมาก"
+        elif bmi >= 25:
+            return "อ้วน"
+        elif bmi >= 23:
+            return "น้ำหนักเกิน"
+        elif bmi >= 18.5:
+            return "ปกติ"
+        else:
+            return "ผอม"
+    except:
+        return "-"
+
+def interpret_waist(waist, height):
+    try:
+        waist = float(waist)
+        height = float(height)
+        return "เกินเกณฑ์" if waist > height else "ปกติ"
+    except:
+        return "-"
 
 def interpret_bp(sbp, dbp):
     try:
@@ -77,35 +88,24 @@ def interpret_bp(sbp, dbp):
             return "ความดันโลหิตปกติ"
         else:
             return "ความดันโลหิตปกติค่อนข้างสูง"
-    except (ValueError, TypeError):
-        return "-"
-
-def assess_waist(waist):
-    try:
-        waist = float(waist)
-        return "เกินเกณฑ์" if waist > 90 else "ปกติ"
-    except (ValueError, TypeError):
+    except:
         return "-"
 
 # ===============================
-# HEADER & FORM
+# UI SEARCH
 # ===============================
 st.markdown("<h1 style='text-align:center;'>ระบบรายงานผลตรวจสุขภาพ</h1>", unsafe_allow_html=True)
 st.markdown("<h4 style='text-align:center; color:gray;'>- กลุ่มงานอาชีวเวชกรรม รพ.สันทราย -</h4>", unsafe_allow_html=True)
 
 with st.form("search_form"):
     col1, col2, col3 = st.columns(3)
-    with col1:
-        id_card = st.text_input("เลขบัตรประชาชน")
-    with col2:
-        hn = st.text_input("HN")
-    with col3:
-        full_name = st.text_input("ชื่อ-สกุล")
-    submitted = st.form_submit_button("ตรวจสอบ")
+    id_card = col1.text_input("เลขบัตรประชาชน")
+    hn = col2.text_input("HN")
+    full_name = col3.text_input("ชื่อ-สกุล")
+    submitted = st.form_submit_button("ค้นหา")
 
 if submitted:
     query = df.copy()
-
     if id_card.strip():
         query = query[query["เลขบัตรประชาชน"] == id_card.strip()]
     if hn.strip():
@@ -115,48 +115,72 @@ if submitted:
 
     if query.empty:
         st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
-    elif len(query) > 1:
-        st.warning("🔎 พบหลายรายการที่ตรงกัน กรุณาระบุให้ชัดเจนขึ้น")
-        st.dataframe(query)
-        st.stop()
     else:
-        st.session_state["person_records"] = query
+        st.session_state["person"] = query.iloc[0]
 
 # ===============================
-# DISPLAY RESULTS
+# DISPLAY
 # ===============================
-if "person_records" in st.session_state:
-    person_df = st.session_state["person_records"]
-    person_info = person_df.iloc[0]
+if "person" in st.session_state:
+    person = st.session_state["person"]
+    st.success(f"✅ พบข้อมูลของ: **{person.get('ชื่อ-สกุล', '-')}**")
+    st.markdown(f"""
+        🆔 {person.get('เลขบัตรประชาชน', '-')} | HN: {person.get('HN', '-')} | เพศ: {person.get('เพศ', '-')}
+    """)
 
-    # Header line
-    line_info = f"""
-    ✅ พบข้อมูลของ: **{person_info.get('ชื่อ-สกุล', '-')}**  
-    🆔 {person_info.get('เลขบัตรประชาชน', '-')} | HN: {person_info.get('HN', '-')} | เพศ: {person_info.get('เพศ', '-')}
-    """
-    st.markdown(line_info)
+    selected_year = st.selectbox("เลือกปี พ.ศ.", sorted([y + 2500 for y in years], reverse=True))
+    year = selected_year - 2500
+    cols = columns_by_year.get(year, {})
 
-    # Health info by year
-    st.markdown("### 📊 น้ำหนัก / ส่วนสูง / รอบเอว")
+    weight = person.get(cols["weight"], "")
+    height = person.get(cols["height"], "")
+    waist = person.get(cols["waist"], "")
+    sbp = person.get(cols["sbp"], "")
+    dbp = person.get(cols["dbp"], "")
+    pulse = person.get(cols["pulse"], "")
+    bmi = person.get(cols["bmi_value"], "")
 
-    if "ปี" not in person_df.columns:
-        st.warning("ไม่พบคอลัมน์ 'ปี' กรุณาตรวจสอบ Google Sheet ว่ามีปีระบุหรือไม่")
-    else:
-        person_df = person_df.sort_values(by="ปี", ascending=False)
-        for _, row in person_df.iterrows():
-            year = int(row.get("ปี", 0))
-            weight = row.get("น้ำหนัก")
-            height = row.get("ส่วนสูง")
-            waist = row.get("รอบเอว")
-            sbp = row.get("SBP", 0)
-            dbp = row.get("DBP", 0)
-            pulse = row.get("ชีพจร", "-")
-            bmi = calc_bmi(weight, height)
+    st.markdown(f"### 📊 ผลตรวจสุขภาพ ปี {selected_year}")
+    st.write(f"- น้ำหนัก: {weight} กก.")
+    st.write(f"- ส่วนสูง: {height} ซม.")
+    st.write(f"- รอบเอว: {waist} ซม. ({interpret_waist(waist, height)})")
+    st.write(f"- BMI: {bmi} ({interpret_bmi(bmi)})")
+    st.write(f"- ความดัน: {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})")
+    st.write(f"- ชีพจร: {pulse} ครั้ง/นาที")
 
-            st.markdown(f"#### 🗓 ปี {year + 543}")
-            st.write(f"- น้ำหนัก: {weight} กก.")
-            st.write(f"- ส่วนสูง: {height} ซม.")
-            st.write(f"- รอบเอว: {waist} ซม. ({assess_waist(waist)})")
-            st.write(f"- BMI: {bmi} ({interpret_bmi(bmi)})")
-            st.write(f"- ความดัน: {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})")
-            st.write(f"- ชีพจร: {pulse} ครั้ง/นาที")
+    # ==========================
+    # GRAPH: BMI + Waist History
+    # ==========================
+    bmi_data = []
+    waist_data = []
+    labels = []
+
+    for y in sorted(years):
+        col = columns_by_year[y]
+        try:
+            bmi_val = float(person.get(col["bmi_value"], 0))
+            waist_val = float(person.get(col["waist"], 0))
+            if bmi_val > 0:
+                bmi_data.append(bmi_val)
+                waist_data.append(waist_val)
+                labels.append(f"B.E. {y + 2500}")
+        except:
+            continue
+
+    if bmi_data:
+        st.markdown("### 📈 BMI Trend")
+        fig, ax = plt.subplots()
+        ax.plot(labels, bmi_data, marker='o', label="BMI")
+        ax.set_ylabel("BMI")
+        ax.set_title("BMI Over Time")
+        ax.legend()
+        st.pyplot(fig)
+
+    if waist_data:
+        st.markdown("### 📈 Waist Circumference Trend")
+        fig, ax = plt.subplots()
+        ax.plot(labels, waist_data, marker='o', label="Waist (cm)")
+        ax.set_ylabel("Waist (cm)")
+        ax.set_title("Waist Circumference Over Time")
+        ax.legend()
+        st.pyplot(fig)
