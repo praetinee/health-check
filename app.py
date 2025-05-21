@@ -181,76 +181,69 @@ if "person_data" in st.session_state:
     else:
         st.warning("ไม่พบข้อมูลสุขภาพรายปี")
 
-# ===============================
-# สรุปผลสุขภาพรายปี
-# ===============================
-summary_data = {}
-for y in available_years_sorted:
-    weight = person.get(f"น้ำหนัก{y}", "")
-    height = person.get(f"ส่วนสูง{y}", "")
-    waist = person.get(f"รอบเอว{y}", "")
-    bmi = calc_bmi(weight, height)
-    sbp = person.get(f"SBP{y}", "")
-    dbp = person.get(f"DBP{y}", "")
-    pulse = person.get(f"pulse{y}", "")
+if "person_data" in st.session_state:
+    person = st.session_state["person_data"]
 
-    if not any([weight, height, waist, sbp, dbp, pulse]):
-        continue  # ข้ามปีที่ไม่มีข้อมูลเลย
+    # ===============================
+    # สรุปผลสุขภาพรายปี
+    # ===============================
+    summary_data = {}
+    for y in available_years_sorted:
+        weight = person.get(f"น้ำหนัก{y}", "")
+        height = person.get(f"ส่วนสูง{y}", "")
+        waist = person.get(f"รอบเอว{y}", "")
+        bmi = calc_bmi(weight, height)
+        sbp = person.get(f"SBP{y}", "")
+        dbp = person.get(f"DBP{y}", "")
+        pulse = person.get(f"pulse{y}", "")
 
-    summary_data[f"25{y}"] = {
-        "น้ำหนัก (กก.)": weight or "-",
-        "ส่วนสูง (ซม.)": height or "-",
-        "รอบเอว (ซม.)": waist or "-",
-        "BMI": bmi if bmi else "-",
-        "ความดัน": f"{sbp}/{dbp}" if sbp and dbp else "-",
-        "ชีพจร": pulse or "-"
-    }
+        if not any([weight, height, waist, sbp, dbp, pulse]):
+            continue  # ข้ามปีที่ไม่มีข้อมูลเลย
 
-if summary_data:
-    summary_df = pd.DataFrame(summary_data)
-    st.markdown("### 📊 สรุปผลสุขภาพรายปี")
-    st.dataframe(summary_df)
+        summary_data[f"25{y}"] = {
+            "น้ำหนัก (กก.)": weight or "-",
+            "ส่วนสูง (ซม.)": height or "-",
+            "รอบเอว (ซม.)": waist or "-",
+            "BMI": bmi if bmi else "-",
+            "ความดัน": f"{sbp}/{dbp}" if sbp and dbp else "-",
+            "ชีพจร": pulse or "-"
+        }
 
-# ===============================
-# กราฟแนวโน้ม BMI (ปลอดภัย + โซนสีเข้ม + เรียงปี)
-# ===============================
-st.markdown("### 📈 BMI Trend Over Years")
+    if summary_data:
+        summary_df = pd.DataFrame(summary_data)
+        st.markdown("### 📊 สรุปผลสุขภาพรายปี")
+        st.dataframe(summary_df)
 
-# เรียงปีจากน้อยไปมาก
-available_years_sorted = sorted(available_years_sorted)
+    # ===============================
+    # กราฟแนวโน้ม BMI
+    # ===============================
+    st.markdown("### 📈 BMI Trend Over Years")
 
-# คำนวณ BMI แต่ละปี
-bmi_values = [
-    calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-"))
-    for y in available_years_sorted
-]
-years_labels = [f"25{y}" for y in available_years_sorted]
+    available_years_sorted = sorted(available_years_sorted)
+    bmi_values = [
+        calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-"))
+        for y in available_years_sorted
+    ]
+    years_labels = [f"25{y}" for y in available_years_sorted]
+    valid_bmi_values = [v for v in bmi_values if isinstance(v, (int, float))]
 
-# กรองเฉพาะค่าที่เป็นตัวเลข
-valid_bmi_values = [v for v in bmi_values if isinstance(v, (int, float))]
-
-if valid_bmi_values:
-    fig, ax = plt.subplots(figsize=(8, 5))
-
-    ax.plot(years_labels, bmi_values, marker='o', linestyle='-', color='blue')
-
-    # แบ่งโซนสีตามระดับ BMI
-    ax.axhspan(0, 18.5, facecolor='#66ccff', alpha=0.6, label='Underweight')
-    ax.axhspan(18.5, 23, facecolor='#66ff66', alpha=0.6, label='Normal')
-    ax.axhspan(23, 25, facecolor='#ffff66', alpha=0.6, label='Overweight')
-    ax.axhspan(25, 30, facecolor='#ff9933', alpha=0.6, label='Obese')
-    ax.axhspan(30, 100, facecolor='#ff6666', alpha=0.6, label='Severely Obese')
-
-    ax.set_title("BMI Trend")
-    ax.set_xlabel("Year (B.E.)")
-    ax.set_ylabel("BMI")
-    ax.set_ylim(bottom=15, top=max(valid_bmi_values + [30]) + 2)
-    ax.legend(loc='upper right')
-
-    st.pyplot(fig)
-else:
-    st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟแนวโน้ม")
-
+    if valid_bmi_values:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.plot(years_labels, bmi_values, marker='o', linestyle='-', color='blue')
+        ax.axhspan(0, 18.5, facecolor='#66ccff', alpha=0.6, label='Underweight')
+        ax.axhspan(18.5, 23, facecolor='#66ff66', alpha=0.6, label='Normal')
+        ax.axhspan(23, 25, facecolor='#ffff66', alpha=0.6, label='Overweight')
+        ax.axhspan(25, 30, facecolor='#ff9933', alpha=0.6, label='Obese')
+        ax.axhspan(30, 100, facecolor='#ff6666', alpha=0.6, label='Severely Obese')
+        ax.set_title("BMI Trend")
+        ax.set_xlabel("Year (B.E.)")
+        ax.set_ylabel("BMI")
+        ax.set_ylim(bottom=15, top=max(valid_bmi_values + [30]) + 2)
+        ax.legend(loc='upper right')
+        st.pyplot(fig)
+    else:
+        st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟแนวโน้ม")
+        
 # ===============================
 # 💧รายงานผลปัสสาวะประจำปี (พร้อมแปลผล + คำแนะนำ)
 # ===============================
