@@ -260,7 +260,7 @@ if "person" in st.session_state:
     def interpret_alb(value):
         if value == "":
             return "-"
-        if value == "Negative":
+        if value.lower() == "negative":
             return "ไม่พบ"
         elif value in ["trace", "1+", "2+"]:
             return "พบโปรตีนในปัสสาวะเล็กน้อย"
@@ -271,7 +271,7 @@ if "person" in st.session_state:
     def interpret_sugar(value):
         if value == "":
             return "-"
-        if value == "Negative":
+        if value.lower() == "negative":
             return "ไม่พบ"
         elif value == "trace":
             return "พบน้ำตาลในปัสสาวะเล็กน้อย"
@@ -282,7 +282,7 @@ if "person" in st.session_state:
     def interpret_rbc(value):
         if value == "":
             return "-"
-        if value in ["0-1", "Negative", "1-2", "2-3", "3-5"]:
+        if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
             return "ปกติ"
         elif value in ["5-10", "10-20"]:
             return "พบเม็ดเลือดแดงในปัสสาวะเล็กน้อย"
@@ -292,12 +292,17 @@ if "person" in st.session_state:
     def interpret_wbc(value):
         if value == "":
             return "-"
-        if value in ["0-1", "Negative", "1-2", "2-3", "3-5"]:
+        if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
             return "ปกติ"
         elif value in ["5-10", "10-20"]:
             return "พบเม็ดเลือดขาวในปัสสาวะเล็กน้อย"
         else:
             return "พบเม็ดเลือดขาวในปัสสาวะ"
+
+    def summarize_urine(*results):
+        if any("พบ" in r and "ปกติ" not in r for r in results if r != "-"):
+            return "ผิดปกติ"
+        return "ปกติ" if any("ปกติ" in r for r in results) else "-"
 
     def advice_urine(sex, alb, sugar, rbc, wbc):
         alb_text = interpret_alb(alb)
@@ -305,28 +310,23 @@ if "person" in st.session_state:
         rbc_text = interpret_rbc(rbc)
         wbc_text = interpret_wbc(wbc)
 
+        # ถ้าไม่มีอะไรเลย
         if all(x == "-" for x in [alb_text, sugar_text, rbc_text, wbc_text]):
             return "-"
 
         if "พบน้ำตาล" in sugar_text:
-            return "ควรตรวจซ้ำเพื่อยืนยันภาวะน้ำตาลในปัสสาวะ"
+            return "ควรลดหวาน และตรวจน้ำตาลในเลือด"
 
         if sex == "หญิง" and "พบเม็ดเลือดแดง" in rbc_text and "ปกติ" in wbc_text:
-            return "อาจมีการปนเปื้อนของประจำเดือน แนะนำตรวจภายในเพิ่มเติม"
-    
-        if sex == "ชาย" and "พบเม็ดเลือดแดง" in rbc_text and "ปกติ" in wbc_text:
-            return "ควรพิจารณาตรวจทางเดินปัสสาวะเพิ่มเติม"
-    
-        if "พบเม็ดเลือดขาว" in wbc_text:
-            return "อาจมีภาวะติดเชื้อทางเดินปัสสาวะ ควรพบแพทย์"
-    
-        return "-"
+            return "อาจปนเปื้อนจากประจำเดือน ควรตรวจซ้ำ"
 
-    def summarize_urine(*results):
-        joined = " ".join(results)
-        if any("พบ" in r for r in results if r != "-" and "ปกติ" not in r):
-            return "ผิดปกติ"
-        return "ปกติ" if any("ปกติ" in r for r in results) else "-"
+        if sex == "ชาย" and "พบเม็ดเลือดแดง" in rbc_text and "ปกติ" in wbc_text:
+            return "ควรตรวจทางเดินปัสสาวะเพิ่มเติม"
+
+        if "พบเม็ดเลือดขาว" in wbc_text:
+            return "อาจติดเชื้อทางเดินปัสสาวะ ดื่มน้ำมากขึ้น"
+
+        return "ควรตรวจปัสสาวะซ้ำ"
 
     # เตรียมตาราง
     urine_table = {
@@ -359,7 +359,6 @@ if "person" in st.session_state:
             summary = "ผิดปกติ" if "ผิดปกติ" in summary else ("ปกติ" if "ปกติ" in summary else "-")
             advice = "-"
         else:
-            # ปี 68: สร้างเอง
             summary = summarize_urine(
                 interpret_alb(alb_raw),
                 interpret_sugar(sugar_raw),
