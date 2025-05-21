@@ -125,6 +125,35 @@ if "person_data" in st.session_state:
     st.success(f"✅ พบข้อมูลของ: {person['ชื่อ-สกุล']}")
     st.markdown(f"**HN:** {person['HN']}  \n**เลขบัตรประชาชน:** {person['เลขบัตรประชาชน']}  \n**เพศ:** {person.get('เพศ', '-')}")
 
+    # ===============================
+    # สร้าง available_years_sorted: ปีที่มีข้อมูลของบุคคลนั้นจริง
+    # ===============================
+    available_years_sorted = []
+
+    for y in range(61, 69):  # หรือ range(61, 80) เพื่ออนาคต
+        urine_key = f"ผลปัสสาวะ{y}" if y < 68 else "ผลปัสสาวะ"
+        extra_fields = [
+            f"ผลเอกซเรย์{y}",
+            f"วัคซีน{y}",
+            f"ตรวจตา{y}",
+            f"ผลตรวจอื่น{y}"
+        ]
+
+        if any([
+            person.get(f"น้ำหนัก{y}"),
+            person.get(f"ส่วนสูง{y}"),
+            person.get(f"รอบเอว{y}"),
+            person.get(f"SBP{y}"),
+            person.get(f"DBP{y}"),
+            person.get(f"pulse{y}"),
+            person.get(urine_key),
+            *[person.get(field) for field in extra_fields]
+        ]):
+            available_years_sorted.append(y)
+
+    available_years_sorted = sorted(available_years_sorted)
+
+    # ตอนนี้สามารถใช้ available_years_sorted ได้อย่างปลอดภัย
     year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
     selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
     selected_year = year_display[selected_label]
@@ -149,37 +178,6 @@ if "person_data" in st.session_state:
     - **ความดันโลหิต:** {sbp}/{dbp} mmHg ({interpret_bp(sbp, dbp)})  
     - **ชีพจร:** {pulse} ครั้ง/นาที
     """)
-
-# ===============================
-# สร้าง available_years_sorted: ปีที่มีข้อมูลของบุคคลนั้นจริง
-# ===============================
-
-available_years_sorted = []
-
-for y in range(61, 69):  # หรือ range(61, 80) เพื่อรองรับอนาคต
-    urine_key = f"ผลปัสสาวะ{y}" if y < 68 else "ผลปัสสาวะ"
-
-    extra_fields = [
-        f"ผลเอกซเรย์{y}",
-        f"วัคซีน{y}",
-        f"ตรวจตา{y}",
-        f"ผลตรวจอื่น{y}"
-    ]
-
-    if any([
-        person.get(f"น้ำหนัก{y}"),
-        person.get(f"ส่วนสูง{y}"),
-        person.get(f"รอบเอว{y}"),
-        person.get(f"SBP{y}"),
-        person.get(f"DBP{y}"),
-        person.get(f"pulse{y}"),
-        person.get(urine_key),
-        *[person.get(field) for field in extra_fields]
-    ]):
-        available_years_sorted.append(y)
-
-# จัดเรียงจากน้อยไปมาก
-available_years_sorted = sorted(available_years_sorted)
 
 # ===============================
 # สรุปผลสุขภาพรายปี
