@@ -99,13 +99,13 @@ def interpret_bp(sbp, dbp):
         if sbp == 0 or dbp == 0:
             return "-"
         if sbp >= 160 or dbp >= 100:
-            return "ความดันโลหิตสูง"
+            return "ความดันสูง"
         elif sbp >= 140 or dbp >= 90:
-            return "ความดันโลหิตสูงเล็กน้อย"
+            return "ความดันสูงเล็กน้อย"
         elif sbp < 120 and dbp < 80:
-            return "ความดันโลหิตปกติ"
+            return "ความดันปกติ"
         else:
-            return "ความดันโลหิตค่อนข้างสูง"
+            return "ความดันค่อนข้างสูง"
     except:
         return "-"
 
