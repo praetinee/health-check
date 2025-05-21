@@ -234,12 +234,12 @@ if "person" in st.session_state:
     if bmi_data and labels:
         st.markdown("### 📈 BMI Trend")
         fig, ax = plt.subplots(figsize=(10, 4))
-
-        ax.axhspan(0, 18.5, facecolor='#3366CC', alpha=0.3, label='Underweight')
-        ax.axhspan(18.5, 23, facecolor='#109618', alpha=0.3, label='Normal')
-        ax.axhspan(23, 25, facecolor='#FF9900', alpha=0.3, label='Overweight')
-        ax.axhspan(25, 30, facecolor='#FF5722', alpha=0.3, label='Obese')
+        
         ax.axhspan(30, 40, facecolor='#D32F2F', alpha=0.3, label='Severely Obese')
+        ax.axhspan(25, 30, facecolor='#FF5722', alpha=0.3, label='Obese')
+        ax.axhspan(23, 25, facecolor='#FF9900', alpha=0.3, label='Overweight')
+        ax.axhspan(18.5, 23, facecolor='#109618', alpha=0.3, label='Normal')
+        ax.axhspan(0, 18.5, facecolor='#3366CC', alpha=0.3, label='Underweight')
 
         ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', linewidth=2, label='BMI')
         ax.set_xticks(np.arange(len(labels)))
