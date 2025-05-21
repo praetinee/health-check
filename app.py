@@ -245,10 +245,9 @@ if "person_data" in st.session_state:
         st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟแนวโน้ม")
         
 # ===============================
-# 💧 รายงานผลปัสสาวะประจำปี (แสดงตามปีที่เลือกข้างบน)
+# 💧 รายงานผลปัสสาวะประจำปี (ตามปีที่เลือก)
 # ===============================
 
-# --- ฟังก์ชันแปลผล ---
 def translate_alb(value):
     if value == "":
         return "-"
@@ -295,7 +294,6 @@ def translate_wbc(value):
     else:
         return "พบเม็ดเลือดขาวในปัสสาวะ"
 
-# --- ฟังก์ชันคำแนะนำ ---
 def urine_advice_interpret(sex, alb_text, sugar_text, rbc_text, wbc_text, urine_result):
     if urine_result == "":
         return ""
@@ -320,28 +318,36 @@ def urine_advice_interpret(sex, alb_text, sugar_text, rbc_text, wbc_text, urine_
 
     return ""
 
-# --- ดึงข้อมูล ---
-urine_key = f"ผลปัสสาวะ{selected_year}" if selected_year < 68 else "ผลปัสสาวะ"
+# --- กำหนดฟิลด์ ---
+if selected_year == 68:
+    urine_key = "ผลปัสสาวะ"
+    alb_raw = person.get("Alb68", "").strip()
+    sugar_raw = person.get("sugar68", "").strip()
+    rbc_raw = person.get("RBC168", "").strip()
+    wbc_raw = person.get("WBC168", "").strip()
+else:
+    urine_key = f"ผลปัสสาวะ{selected_year}"
+    alb_raw = person.get(f"Alb{selected_year}", "").strip()
+    sugar_raw = person.get(f"sugar{selected_year}", "").strip()
+    rbc_raw = person.get(f"RBC1{selected_year}", "").strip()
+    wbc_raw = person.get(f"WBC1{selected_year}", "").strip()
+
 urine_result = person.get(urine_key, "").strip()
 
-alb_raw = person.get(f"Alb{selected_year}", "").strip()
-sugar_raw = person.get(f"sugar{selected_year}", "").strip()
-rbc_raw = person.get(f"RBC1{selected_year}", "").strip()
-wbc_raw = person.get(f"WBC1{selected_year}", "").strip()
-
-# --- แปลผล ---
+# --- แปลผลย่อย ---
 alb_text = translate_alb(alb_raw)
 sugar_text = translate_sugar(sugar_raw)
 rbc_text = translate_rbc(rbc_raw)
 wbc_text = translate_wbc(wbc_raw)
 
-# --- สรุปผลอัตโนมัติ หากยังไม่กรอก ---
+# --- สรุปผลอัตโนมัติ หากไม่มีค่า urine_result แต่พบค่าผิดปกติ ---
 if not urine_result:
-    if any("พบ" in val for val in [alb_text, sugar_text, rbc_text, wbc_text]):
+    abnormal_flags = [v for v in [alb_text, sugar_text, rbc_text, wbc_text] if v != "-" and "พบ" in v]
+    if abnormal_flags:
         urine_result = "ผลปัสสาวะผิดปกติ"
 
 # --- แสดงผล ---
-if urine_result or alb_raw or sugar_raw or rbc_raw or wbc_raw:
+if any([alb_raw, sugar_raw, rbc_raw, wbc_raw, urine_result]):
     st.markdown(f"### 💧 ผลการตรวจปัสสาวะ ปี พ.ศ. 25{selected_year}")
     st.markdown(f"- **สรุปผลรวม:** {urine_result if urine_result else '-'}")
 
