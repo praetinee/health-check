@@ -261,7 +261,7 @@ if "person" in st.session_state:
     def interpret_alb(value):
         if value == "":
             return "-"
-        if value == "negative":
+        if value == "Negative":
             return "ไม่พบ"
         elif value in ["trace", "1+", "2+"]:
             return "พบโปรตีนในปัสสาวะเล็กน้อย"
@@ -272,7 +272,7 @@ if "person" in st.session_state:
     def interpret_sugar(value):
         if value == "":
             return "-"
-        if value == "negative":
+        if value == "Negative":
             return "ไม่พบ"
         elif value == "trace":
             return "พบน้ำตาลในปัสสาวะเล็กน้อย"
