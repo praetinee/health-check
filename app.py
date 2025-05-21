@@ -125,7 +125,7 @@ if "person_data" in st.session_state:
     st.success(f"✅ พบข้อมูลของ: {person['ชื่อ-สกุล']}")
     st.markdown(f"**HN:** {person['HN']}  \n**เลขบัตรประชาชน:** {person['เลขบัตรประชาชน']}  \n**เพศ:** {person.get('เพศ', '-')}")
 
-    year_display = {f"พ.ศ. 25{y}": y for y in available_years}
+    year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
     selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
     selected_year = year_display[selected_label]
 
@@ -151,10 +151,10 @@ if "person_data" in st.session_state:
     """)
 
 # ===============================
-# สร้าง available_years: ปีที่มีข้อมูลของบุคคลนั้นจริง
+# สร้าง available_years_sorted: ปีที่มีข้อมูลของบุคคลนั้นจริง
 # ===============================
 
-available_years = []
+available_years_sorted = []
 
 for y in range(61, 69):  # สามารถเปลี่ยนเป็น range(61, 80) หากต้องการรองรับอนาคต
     urine_key = f"ผลปัสสาวะ{y}" if y < 68 else "ผลปัสสาวะ"
@@ -178,10 +178,10 @@ for y in range(61, 69):  # สามารถเปลี่ยนเป็น r
         person.get(urine_key),
         *[person.get(field) for field in extra_fields]
     ]):
-        available_years.append(y)
+        available_years_sorted.append(y)
 
 # เรียงจากน้อยไปมาก
-available_years_sorted = sorted(available_years)
+available_years_sorted = sorted(available_years_sorted)
 
 # ===============================
 # สรุปผลสุขภาพรายปี
@@ -219,7 +219,7 @@ if summary_data:
 st.markdown("### 📈 BMI Trend Over Years")
 
 # เรียงปีจากน้อยไปมาก
-available_years_sorted = sorted(available_years)
+available_years_sorted = sorted(available_years_sorted)
 
 # คำนวณ BMI แต่ละปี
 bmi_values = [
