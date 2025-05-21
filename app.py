@@ -1,4 +1,42 @@
 import streamlit as st
+
+# ====================
+# USER AUTH
+# ====================
+USERS = {
+    "admin": "1234",
+    "nurse": "nursepass",
+    "doctor": "drpass"
+}
+
+def login():
+    st.title("🔐 เข้าสู่ระบบรายงานผลสุขภาพ")
+    username = st.text_input("ชื่อผู้ใช้")
+    password = st.text_input("รหัสผ่าน", type="password")
+    if st.button("เข้าสู่ระบบ"):
+        if username in USERS and USERS[username] == password:
+            st.session_state["logged_in"] = True
+            st.session_state["user"] = username
+            st.experimental_rerun()
+        else:
+            st.error("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง")
+
+def logout():
+    st.session_state.clear()
+    st.experimental_rerun()
+
+# ====================
+# GUARD
+# ====================
+if "logged_in" not in st.session_state:
+    login()
+    st.stop()
+else:
+    st.sidebar.success(f"👤 คุณ: {st.session_state['user']}")
+    if st.sidebar.button("ออกจากระบบ"):
+        logout()
+
+import streamlit as st
 import pandas as pd
 import gspread
 import json
