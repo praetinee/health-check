@@ -195,43 +195,49 @@ if "person" in st.session_state:
 # GRAPH: BMI History
 # ==========================
 
+# เตรียมข้อมูลสำหรับกราฟ BMI ที่คำนวณเอง
 bmi_data = []
 labels = []
 
 for y in sorted(years):
-    cols = columns_by_year[y]  # ✅ ต้องมีตรงนี้ก่อนใช้ cols
-
+    cols = columns_by_year[y]
     weight = person.get(cols["weight"], "")
     height = person.get(cols["height"], "")
-    
+
     try:
         weight = float(weight)
         height = float(height)
-        bmi_val = round(weight / ((height / 100) ** 2), 1)
-        bmi_data.append(bmi_val)
-        labels.append(f"B.E. {y + 2500}")
+        if weight > 0 and height > 0:
+            bmi_val = round(weight / ((height / 100) ** 2), 1)
+            bmi_data.append(bmi_val)
+            labels.append(f"B.E. {y + 2500}")
     except:
         continue
 
-    # ✅ วาดกราฟถ้ามีข้อมูล
+# วาดกราฟถ้ามีข้อมูลเพียงพอ
 if bmi_data and labels:
     st.markdown("### 📈 BMI Trend")
     fig, ax = plt.subplots(figsize=(10, 4))
 
-    ax.axhspan(0, 18.5, facecolor='#4285F4', alpha=0.3, label='Underweight')
-    ax.axhspan(18.5, 23, facecolor='#34A853', alpha=0.3, label='Normal')
-    ax.axhspan(23, 25, facecolor='#FBBC05', alpha=0.4, label='Overweight')
-    ax.axhspan(25, 30, facecolor='#FF8800', alpha=0.4, label='Obese')
-    ax.axhspan(30, 40, facecolor='#EA4335', alpha=0.4, label='Severely Obese')
+    # พื้นหลังแสดงช่วงค่า BMI ด้วยโซนสีเข้ม
+    ax.axhspan(0, 18.5, facecolor='#3366CC', alpha=0.3, label='Underweight')
+    ax.axhspan(18.5, 23, facecolor='#109618', alpha=0.3, label='Normal')
+    ax.axhspan(23, 25, facecolor='#FF9900', alpha=0.3, label='Overweight')
+    ax.axhspan(25, 30, facecolor='#FF5722', alpha=0.3, label='Obese')
+    ax.axhspan(30, 40, facecolor='#D32F2F', alpha=0.3, label='Severely Obese')
 
-    ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', label="BMI")
+    # เส้นกราฟ BMI
+    ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', linewidth=2, label='BMI')
+
+    # การตั้งค่าแกนและตกแต่ง
     ax.set_xticks(np.arange(len(labels)))
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("BMI")
+    ax.set_xticklabels(labels, rotation=0)
+    ax.set_ylabel("BMI", fontsize=12)
     ax.set_ylim(15, 40)
-    ax.set_title("BMI Over Time")
+    ax.set_title("BMI Over Time", fontsize=14)
     ax.legend(loc="upper left")
 
     st.pyplot(fig)
+
 else:
     st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
