@@ -254,79 +254,80 @@ if "person" in st.session_state:
         st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
 
 # ===============================
-# URINE ANALYSIS TABLE
+# DISPLAY: URINE TEST
 # ===============================
 
-def interpret_alb(val):
-    if val == "":
-        return ""
-    if val == "negative":
+# ฟังก์ชันแปลผลตรวจปัสสาวะ
+def interpret_alb(value):
+    if value == "":
+        return "-"
+    if value == "negative":
         return "ไม่พบโปรตีนในปัสสาวะ"
-    if val in ["trace", "1+", "2+"]:
+    elif value in ["trace", "1+", "2+"]:
         return "พบโปรตีนในปัสสาวะเล็กน้อย"
-    if val == "3+":
+    elif value == "3+":
         return "พบโปรตีนในปัสสาวะ"
-    return ""
+    return "-"
 
-def interpret_sugar(val):
-    if val == "":
-        return ""
-    if val == "negative":
+def interpret_sugar(value):
+    if value == "":
+        return "-"
+    if value == "negative":
         return "ไม่พบน้ำตาลในปัสสาวะ"
-    if val == "trace":
+    elif value == "trace":
         return "พบน้ำตาลในปัสสาวะเล็กน้อย"
-    if val in ["1+", "2+", "3+", "4+", "5+", "6+"]:
+    elif value in ["1+", "2+", "3+", "4+", "5+", "6+"]:
         return "พบน้ำตาลในปัสสาวะ"
-    return ""
+    return "-"
 
-def interpret_rbc(val):
-    if val == "":
-        return ""
-    if val in ["0-1", "negative", "1-2", "2-3", "3-5"]:
+def interpret_rbc(value):
+    if value == "":
+        return "-"
+    if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
         return "เม็ดเลือดแดงในปัสสาวะปกติ"
-    if val in ["5-10", "10-20"]:
+    elif value in ["5-10", "10-20"]:
         return "พบเม็ดเลือดแดงในปัสสาวะเล็กน้อย"
-    return "พบเม็ดเลือดแดงในปัสสาวะ"
+    else:
+        return "พบเม็ดเลือดแดงในปัสสาวะ"
 
-def interpret_wbc(val):
-    if val == "":
-        return ""
-    if val in ["0-1", "negative", "1-2", "2-3", "3-5"]:
+def interpret_wbc(value):
+    if value == "":
+        return "-"
+    if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
         return "เม็ดเลือดขาวในปัสสาวะปกติ"
-    if val in ["5-10", "10-20"]:
+    elif value in ["5-10", "10-20"]:
         return "พบเม็ดเลือดขาวในปัสสาวะเล็กน้อย"
-    return "พบเม็ดเลือดขาวในปัสสาวะ"
+    else:
+        return "พบเม็ดเลือดขาวในปัสสาวะ"
 
-# เตรียมข้อมูลตารางปัสสาวะ
-urine_data = {
+# เตรียมตาราง
+urine_table = {
     "ปี พ.ศ.": [],
-    "Alb": [],
-    "Sugar": [],
-    "RBC": [],
-    "WBC": [],
-    "ผลAlb.UA": [],
-    "ผลSugar.UA": [],
-    "ผลRBC.UA": [],
-    "ผลWBC.UA": [],
+    "โปรตีน": [],
+    "น้ำตาล": [],
+    "เม็ดเลือดแดง": [],
+    "เม็ดเลือดขาว": []
 }
 
-for y in sorted(years):
+for y in years:
     cols = columns_by_year[y]
-    alb = person.get("Alb", "")  # คอลัมน์นี้ในปี 68 ไม่มีเลขกำกับ
+    alb = person.get("Alb", "")
     sugar = person.get("sugar", "")
     rbc = person.get("RBC1", "")
     wbc = person.get("WBC1", "")
 
-    urine_data["ปี พ.ศ."].append(y + 2500)
-    urine_data["Alb"].append(alb)
-    urine_data["Sugar"].append(sugar)
-    urine_data["RBC"].append(rbc)
-    urine_data["WBC"].append(wbc)
-    urine_data["ผลAlb.UA"].append(interpret_alb(alb))
-    urine_data["ผลSugar.UA"].append(interpret_sugar(sugar))
-    urine_data["ผลRBC.UA"].append(interpret_rbc(rbc))
-    urine_data["ผลWBC.UA"].append(interpret_wbc(wbc))
+    alb_result = f"{alb}<br><span style='font-size: 13px; color: gray;'>{interpret_alb(alb)}</span>" if alb else "-"
+    sugar_result = f"{sugar}<br><span style='font-size: 13px; color: gray;'>{interpret_sugar(sugar)}</span>" if sugar else "-"
+    rbc_result = f"{rbc}<br><span style='font-size: 13px; color: gray;'>{interpret_rbc(rbc)}</span>" if rbc else "-"
+    wbc_result = f"{wbc}<br><span style='font-size: 13px; color: gray;'>{interpret_wbc(wbc)}</span>" if wbc else "-"
 
-# แสดงตารางผลปัสสาวะ
-st.markdown("### 🧪 ผลตรวจปัสสาวะ")
-st.dataframe(pd.DataFrame(urine_data).set_index("ปี พ.ศ.").T)
+    urine_table["ปี พ.ศ."].append(y + 2500)
+    urine_table["โปรตีน"].append(alb_result)
+    urine_table["น้ำตาล"].append(sugar_result)
+    urine_table["เม็ดเลือดแดง"].append(rbc_result)
+    urine_table["เม็ดเลือดขาว"].append(wbc_result)
+
+# แสดงผลแบบ HTML เพื่อรองรับ <br>
+st.markdown("### 🚽 ผลตรวจปัสสาวะ")
+urine_df = pd.DataFrame(urine_table).set_index("ปี พ.ศ.").T
+st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
