@@ -254,10 +254,9 @@ if "person" in st.session_state:
         st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
 
     # ===============================
-    # DISPLAY: URINE TEST BY YEAR
+    # DISPLAY: URINE TEST (ปี 2561–2568)
     # ===============================
 
-    # ฟังก์ชันแปลผล
     def interpret_alb(value):
         if value == "":
             return "-"
@@ -300,39 +299,64 @@ if "person" in st.session_state:
         else:
             return "พบเม็ดเลือดขาวในปัสสาวะ"
 
-    # ตารางผลตรวจปัสสาวะ
+    def advice_urine(sex, alb, sugar, rbc, wbc):
+        if not any([alb, sugar, rbc, wbc]):
+            return "-"
+    
+        alb_text = interpret_alb(alb)
+        sugar_text = interpret_sugar(sugar)
+        rbc_text = interpret_rbc(rbc)
+        wbc_text = interpret_wbc(wbc)
+
+        if sugar_text.startswith("พบน้ำตาล"):
+            return "ควรตรวจซ้ำเพื่อยืนยันภาวะน้ำตาลในปัสสาวะ"
+    
+        if sex == "หญิง" and "พบเม็ดเลือดแดง" in rbc_text and "ปกติ" in wbc_text:
+            return "แนะนำตรวจภายในเพิ่มเติม"
+        if sex == "ชาย" and "พบเม็ดเลือดแดง" in rbc_text and "ปกติ" in wbc_text:
+            return "ควรพิจารณาตรวจทางเดินปัสสาวะเพิ่มเติม"
+    
+        if "พบเม็ดเลือดขาว" in wbc_text:
+            return "อาจมีภาวะติดเชื้อทางเดินปัสสาวะ ควรพบแพทย์"
+    
+        return ""
+
+    # เตรียมโครงสร้าง
     urine_table = {
-        "ปี พ.ศ.": [],
-        "โปรตีนในปัสสาวะ": [],
-        "น้ำตาลในปัสสาวะ": [],
-        "เม็ดเลือดแดงในปัสสาวะ": [],
-        "เม็ดเลือดขาวในปัสสาวะ": []
+        "รายการ": ["โปรตีน", "น้ำตาล", "เม็ดเลือดแดง", "เม็ดเลือดขาว", "ผลสรุป", "คำแนะนำ"]
     }
+    person_sex = person.get("เพศ", "")
 
     for y in years:
-        year_label = str(y) if y != 68 else ""  # ปี 68 ไม่มีเลขท้าย
+        year_label = str(y) if y != 68 else ""
+        col_year = y + 2500
+
         alb_col = f"Alb{year_label}"
         sugar_col = f"sugar{year_label}"
         rbc_col = f"RBC1{year_label}"
         wbc_col = f"WBC1{year_label}"
+        summary_col = f"ผลปัสสาวะ{year_label}" if y != 68 else None
 
-        alb = person.get(alb_col, "")
-        sugar = person.get(sugar_col, "")
-        rbc = person.get(rbc_col, "")
-        wbc = person.get(wbc_col, "")
+        alb_val = person.get(alb_col, "").strip()
+        sugar_val = person.get(sugar_col, "").strip()
+        rbc_val = person.get(rbc_col, "").strip()
+        wbc_val = person.get(wbc_col, "").strip()
 
-        alb_result = f"{alb}<br><span style='font-size: 13px; color: gray;'>{interpret_alb(alb)}</span>" if alb else "-"
-        sugar_result = f"{sugar}<br><span style='font-size: 13px; color: gray;'>{interpret_sugar(sugar)}</span>" if sugar else "-"
-        rbc_result = f"{rbc}<br><span style='font-size: 13px; color: gray;'>{interpret_rbc(rbc)}</span>" if rbc else "-"
-        wbc_result = f"{wbc}<br><span style='font-size: 13px; color: gray;'>{interpret_wbc(wbc)}</span>" if wbc else "-"
+        alb = f"{alb_val}<br><span style='font-size: 13px; color: gray;'>{interpret_alb(alb_val)}</span>" if alb_val else "-"
+        sugar = f"{sugar_val}<br><span style='font-size: 13px; color: gray;'>{interpret_sugar(sugar_val)}</span>" if sugar_val else "-"
+        rbc = f"{rbc_val}<br><span style='font-size: 13px; color: gray;'>{interpret_rbc(rbc_val)}</span>" if rbc_val else "-"
+        wbc = f"{wbc_val}<br><span style='font-size: 13px; color: gray;'>{interpret_wbc(wbc_val)}</span>" if wbc_val else "-"
 
-        urine_table["ปี พ.ศ."].append(y + 2500)
-        urine_table["โปรตีนในปัสสาวะ"].append(alb_result)
-        urine_table["น้ำตาลในปัสสาวะ"].append(sugar_result)
-        urine_table["เม็ดเลือดแดงในปัสสาวะ"].append(rbc_result)
-        urine_table["เม็ดเลือดขาวในปัสสาวะ"].append(wbc_result)
+        if y != 68:
+            summary = person.get(summary_col, "-") or "-"
+            advice = "-"
+        else:
+            summary = f"{interpret_alb(alb_val)} / {interpret_sugar(sugar_val)} / {interpret_rbc(rbc_val)} / {interpret_wbc(wbc_val)}"
+            advice = advice_urine(person_sex, alb_val, sugar_val, rbc_val, wbc_val) or "-"
 
-    # แสดงผล
-    st.markdown("### 🚽 ผลตรวจปัสสาวะ (ปี 61–68)")
-    urine_df = pd.DataFrame(urine_table).set_index("ปี พ.ศ.").T
+        urine_table[col_year] = [alb, sugar, rbc, wbc, summary, advice]
+
+    # แสดงตาราง
+    urine_df = pd.DataFrame(urine_table).set_index("รายการ")
+    st.markdown("### 🚽 ผลตรวจปัสสาวะ (ปี 2561–2568)")
     st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
