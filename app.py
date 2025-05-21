@@ -191,47 +191,47 @@ if "person" in st.session_state:
     html_table = pd.DataFrame(table_data).set_index("ปี พ.ศ.").T.to_html(escape=False)
     st.markdown(html_table, unsafe_allow_html=True)
 
-# ==========================
-# GRAPH: BMI History
-# ==========================
+    # ==========================
+    # GRAPH: BMI History
+    # ==========================
 
-bmi_data = []
-labels = []
+    bmi_data = []
+    labels = []
 
-for y in sorted(years):
-    cols = columns_by_year[y]  # ✅ ต้องอยู่ในลูปเท่านั้น!
+    for y in sorted(years):
+        cols = columns_by_year[y]  # ✅ ต้องอยู่ในลูปเท่านั้น!
 
-    weight = person.get(cols["weight"], "")
-    height = person.get(cols["height"], "")
+        weight = person.get(cols["weight"], "")
+        height = person.get(cols["height"], "")
 
-    try:
-        weight = float(weight)
-        height = float(height)
-        if weight > 0 and height > 0:
-            bmi_val = round(weight / ((height / 100) ** 2), 1)
-            bmi_data.append(bmi_val)
-            labels.append(f"B.E. {y + 2500}")
-    except:
-        continue
+        try:
+            weight = float(weight)
+            height = float(height)
+            if weight > 0 and height > 0:
+                bmi_val = round(weight / ((height / 100) ** 2), 1)
+                bmi_data.append(bmi_val)
+                labels.append(f"B.E. {y + 2500}")
+        except:
+            continue
 
-if bmi_data and labels:
-    st.markdown("### 📈 BMI Trend")
-    fig, ax = plt.subplots(figsize=(10, 4))
+    if bmi_data and labels:
+        st.markdown("### 📈 BMI Trend")
+        fig, ax = plt.subplots(figsize=(10, 4))
 
-    ax.axhspan(0, 18.5, facecolor='#3366CC', alpha=0.3, label='Underweight')
-    ax.axhspan(18.5, 23, facecolor='#109618', alpha=0.3, label='Normal')
-    ax.axhspan(23, 25, facecolor='#FF9900', alpha=0.3, label='Overweight')
-    ax.axhspan(25, 30, facecolor='#FF5722', alpha=0.3, label='Obese')
-    ax.axhspan(30, 40, facecolor='#D32F2F', alpha=0.3, label='Severely Obese')
+        ax.axhspan(0, 18.5, facecolor='#3366CC', alpha=0.3, label='Underweight')
+        ax.axhspan(18.5, 23, facecolor='#109618', alpha=0.3, label='Normal')
+        ax.axhspan(23, 25, facecolor='#FF9900', alpha=0.3, label='Overweight')
+        ax.axhspan(25, 30, facecolor='#FF5722', alpha=0.3, label='Obese')
+        ax.axhspan(30, 40, facecolor='#D32F2F', alpha=0.3, label='Severely Obese')
 
-    ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', linewidth=2, label='BMI')
-    ax.set_xticks(np.arange(len(labels)))
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("BMI", fontsize=12)
-    ax.set_ylim(15, 40)
-    ax.set_title("BMI Over Time", fontsize=14)
-    ax.legend(loc="upper left")
+        ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', linewidth=2, label='BMI')
+        ax.set_xticks(np.arange(len(labels)))
+        ax.set_xticklabels(labels)
+        ax.set_ylabel("BMI", fontsize=12)
+        ax.set_ylim(15, 40)
+        ax.set_title("BMI Over Time", fontsize=14)
+        ax.legend(loc="upper left")
 
-    st.pyplot(fig)
-else:
-    st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
+        st.pyplot(fig)
+    else:
+        st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
