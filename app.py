@@ -156,22 +156,50 @@ if "person_data" in st.session_state:
     - **ชีพจร:** {pulse} ครั้ง/นาที
     """)
 
-    # ===============================
-    # สรุปสุขภาพแบบ Transpose
-    # ===============================
-    summary_data = {}
-    for y in available_years:
-        summary_data[f"25{y}"] = {
-            "น้ำหนัก (กก.)": person.get(f"น้ำหนัก{y}", "-"),
-            "ส่วนสูง (ซม.)": person.get(f"ส่วนสูง{y}", "-"),
-            "รอบเอว (ซม.)": person.get(f"รอบเอว{y}", "-"),
-            "BMI": calc_bmi(person.get(f"น้ำหนัก{y}", "-"), person.get(f"ส่วนสูง{y}", "-")),
-            "ความดัน": f"{person.get(f'SBP{y}', '-')}/{person.get(f'DBP{y}', '-')}",
-            "ชีพจร": person.get(f"pulse{y}", "-")
-        }
+# ===============================
+# สร้าง available_years เฉพาะปีที่มีข้อมูลจริง
+# ===============================
+available_years = []
+for y in range(61, 69):
+    urine_key = f"ผลปัสสาวะ{y}" if y < 68 else "ผลปัสสาวะ"
+    if any([
+        person.get(f"น้ำหนัก{y}"), person.get(f"ส่วนสูง{y}"),
+        person.get(f"รอบเอว{y}"), person.get(f"SBP{y}"),
+        person.get(f"DBP{y}"), person.get(f"pulse{y}"),
+        person.get(urine_key)
+    ]):
+        available_years.append(y)
 
+available_years_sorted = sorted(available_years)
+
+# ===============================
+# สรุปผลสุขภาพรายปี
+# ===============================
+summary_data = {}
+for y in available_years_sorted:
+    weight = person.get(f"น้ำหนัก{y}", "")
+    height = person.get(f"ส่วนสูง{y}", "")
+    waist = person.get(f"รอบเอว{y}", "")
+    bmi = calc_bmi(weight, height)
+    sbp = person.get(f"SBP{y}", "")
+    dbp = person.get(f"DBP{y}", "")
+    pulse = person.get(f"pulse{y}", "")
+
+    if not any([weight, height, waist, sbp, dbp, pulse]):
+        continue  # ข้ามปีที่ไม่มีข้อมูลเลย
+
+    summary_data[f"25{y}"] = {
+        "น้ำหนัก (กก.)": weight or "-",
+        "ส่วนสูง (ซม.)": height or "-",
+        "รอบเอว (ซม.)": waist or "-",
+        "BMI": bmi if bmi else "-",
+        "ความดัน": f"{sbp}/{dbp}" if sbp and dbp else "-",
+        "ชีพจร": pulse or "-"
+    }
+
+if summary_data:
     summary_df = pd.DataFrame(summary_data)
-    st.markdown("### 📊 สรุปผลสุขภาพรายปี (แนวนอน)")
+    st.markdown("### 📊 สรุปผลสุขภาพรายปี")
     st.dataframe(summary_df)
 
 # ===============================
