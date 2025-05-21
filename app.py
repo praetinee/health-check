@@ -9,9 +9,10 @@ from oauth2client.service_account import ServiceAccountCredentials
 st.set_page_config(page_title="ระบบรายงานสุขภาพ", layout="wide")
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Sarabun&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch&display=swap');
+
     html, body, [class*="css"] {
-        font-family: 'Sarabun', sans-serif !important;
+        font-family: 'Chakra Petch', sans-serif !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -131,28 +132,28 @@ if "person" in st.session_state:
 
     # ✅ แสดงเลขบัตร / HN / เพศ ด้วยสีขาว (เพื่อ contrast กับพื้นเข้ม)
     st.markdown(f"""
-    <h3 style='color: white; margin-top: 0.5rem;'>
-    เลขบัตรประชาชน: {person.get('เลขบัตรประชาชน', '-')} &nbsp;&nbsp;&nbsp;&nbsp;
-    HN: {person.get('HN', '-')} &nbsp;&nbsp;&nbsp;&nbsp;
+    <p style='color: white; font-size: 16px; line-height: 1.6;'>
+    เลขบัตรประชาชน: {person.get('เลขบัตรประชาชน', '-')}<br>
+    HN: {person.get('HN', '-')}<br>
     เพศ: {person.get('เพศ', '-')}
-    </h3>
+    </p>
     """, unsafe_allow_html=True)
-
-    # ✅ Dropdown เลือกปี พ.ศ. (แม้ว่าไม่ได้ใช้โดยตรงก็ยังแสดงเพื่อ UI ดีขึ้น)
-    selected_year = st.selectbox("เลือกปี พ.ศ.", sorted([y + 2500 for y in years], reverse=True))
 
     # ✅ สร้างตารางข้อมูลสุขภาพตามปี
     table_data = {
         "ปี พ.ศ.": [],
         "น้ำหนัก (กก.)": [],
+        "ส่วนสูง (ซม.)": [],  # ✅ เพิ่มตรงนี้
         "รอบเอว (ซม.)": [],
         "ความดัน (mmHg)": [],
         "BMI (แปลผล)": []
     }
 
+
     for y in sorted(years):
         cols = columns_by_year[y]
         weight = person.get(cols["weight"], "")
+        height = person.get(cols["height"], "")
         waist = person.get(cols["waist"], "")
         sbp = person.get(cols["sbp"], "")
         dbp = person.get(cols["dbp"], "")
@@ -178,6 +179,7 @@ if "person" in st.session_state:
         # ✅ ใส่ข้อมูลลงใน dictionary
         table_data["ปี พ.ศ."].append(y + 2500)
         table_data["น้ำหนัก (กก.)"].append(weight if weight else "-")
+        table_data["ส่วนสูง (ซม.)"].append(height if height else "-")
         table_data["รอบเอว (ซม.)"].append(waist if waist else "-")
         table_data["ความดัน (mmHg)"].append(bp_str)
         table_data["BMI (แปลผล)"].append(bmi_str)
@@ -210,12 +212,12 @@ if "person" in st.session_state:
         st.markdown("### 📈 BMI Trend")
         fig, ax = plt.subplots(figsize=(10, 4))
 
-        # 🔵 โซนสีแบ่งระดับ BMI
-        ax.axhspan(0, 18.5, facecolor='#D0E6F7', alpha=0.4, label='Underweight')
-        ax.axhspan(18.5, 23, facecolor='#B7F7C6', alpha=0.4, label='Normal')
-        ax.axhspan(23, 25, facecolor='#FFFACD', alpha=0.4, label='Overweight')
-        ax.axhspan(25, 30, facecolor='#FFD580', alpha=0.4, label='Obese')
-        ax.axhspan(30, 40, facecolor='#FFA07A', alpha=0.4, label='Severely Obese')
+        # 🔵 โซนสีแบ่งระดับ BMI (ใช้สีเข้ม)
+        ax.axhspan(0, 18.5, facecolor='#4285F4', alpha=0.3, label='Underweight')
+        ax.axhspan(18.5, 23, facecolor='#34A853', alpha=0.3, label='Normal')
+        ax.axhspan(23, 25, facecolor='#FBBC05', alpha=0.4, label='Overweight')
+        ax.axhspan(25, 30, facecolor='#FF8800', alpha=0.4, label='Obese')
+        ax.axhspan(30, 40, facecolor='#EA4335', alpha=0.4, label='Severely Obese')
 
         # 📈 วาดเส้นกราฟ BMI
         ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', label="BMI")
