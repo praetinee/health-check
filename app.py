@@ -253,7 +253,11 @@ if "person_data" in st.session_state and available_years_sorted:
 
     # ===== กำหนดปีที่เลือกจาก selectbox =====
     year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
-    selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
+    selected_label = st.selectbox(
+        "เลือกปี พ.ศ. ที่ต้องการดูผล",
+        list(year_display.keys()),
+        key="year_select"
+    )
     selected_year = year_display[selected_label]
 
     # ===== ปลอดภัย: ใช้ selected_year ได้หลังตรงนี้เท่านั้น =====
