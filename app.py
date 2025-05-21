@@ -191,23 +191,26 @@ if "person" in st.session_state:
     html_table = pd.DataFrame(table_data).set_index("ปี พ.ศ.").T.to_html(escape=False)
     st.markdown(html_table, unsafe_allow_html=True)
 
-    # ==========================
-    # GRAPH: BMI History
-    # ==========================
+# ==========================
+# GRAPH: BMI History
+# ==========================
 
-    # ✅ เตรียมข้อมูล BMI และ labels สำหรับแต่ละปี
-    bmi_data = []
-    labels = []
+bmi_data = []
+labels = []
 
-    for y in sorted(years):
-        col = columns_by_year[y]
-        try:
-            bmi_val = float(person.get(col["bmi_value"], 0))
-            if bmi_val > 0:
-                bmi_data.append(bmi_val)
-                labels.append(f"B.E. {y + 2500}")
-        except:
-            continue
+for y in sorted(years):
+    cols = columns_by_year[y]
+    weight = person.get(cols["weight"], "")
+    height = person.get(cols["height"], "")
+    
+    try:
+        weight = float(weight)
+        height = float(height)
+        bmi_val = round(weight / ((height / 100) ** 2), 1)
+        bmi_data.append(bmi_val)
+        labels.append(f"B.E. {y + 2500}")
+    except:
+        continue
 
     # ✅ วาดกราฟถ้ามีข้อมูล
     if bmi_data and labels:
