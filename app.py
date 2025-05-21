@@ -125,9 +125,7 @@ if "person_data" in st.session_state:
     st.success(f"✅ พบข้อมูลของ: {person['ชื่อ-สกุล']}")
     st.markdown(f"**HN:** {person['HN']}  \n**เลขบัตรประชาชน:** {person['เลขบัตรประชาชน']}  \n**เพศ:** {person.get('เพศ', '-')}")
 
-    # ===============================
-    # สร้าง available_years_sorted: ปีที่มีข้อมูลของบุคคลนั้นจริง
-    # ===============================
+    # ======= สร้าง available_years_sorted ก่อนใช้งาน ========
     available_years_sorted = []
 
     for y in range(61, 69):  # หรือ range(61, 80) เพื่ออนาคต
@@ -153,7 +151,12 @@ if "person_data" in st.session_state:
 
     available_years_sorted = sorted(available_years_sorted)
 
-    # ตอนนี้สามารถใช้ available_years_sorted ได้อย่างปลอดภัย
+    # ======= ค่อยใช้ใน selectbox หลังจากคำนวณแล้ว ========
+    year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
+    selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
+    selected_year = year_display[selected_label]
+
+    # จากนี้ลงไปคุณสามารถใช้ selected_year ได้อย่างปลอดภัย ✅
     year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
     selected_label = st.selectbox("เลือกปี พ.ศ. ที่ต้องการดูผล", list(year_display.keys()))
     selected_year = year_display[selected_label]
