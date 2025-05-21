@@ -245,58 +245,122 @@ if "person_data" in st.session_state:
         st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟแนวโน้ม")
         
 # ===============================
-# 💧รายงานผลปัสสาวะประจำปี (พร้อมแปลผล + คำแนะนำ)
+# 💧 รายงานผลปัสสาวะประจำปี (แสดงตามปีที่เลือกข้างบน)
 # ===============================
 
-if "person_data" in st.session_state and available_years_sorted:
-    person = st.session_state["person_data"]
+# --- ฟังก์ชันแปลผล ---
+def translate_alb(value):
+    if value == "":
+        return "-"
+    v = value.lower()
+    if v == "negative":
+        return "ไม่พบโปรตีนในปัสสาวะ"
+    elif v in ["trace", "1+", "2+"]:
+        return "พบโปรตีนในปัสสาวะเล็กน้อย"
+    elif v == "3+":
+        return "พบโปรตีนในปัสสาวะ"
+    return "-"
 
-    # ===== กำหนดปีที่เลือกจาก selectbox =====
-    year_display = {f"พ.ศ. 25{y}": y for y in available_years_sorted}
-    selected_label = st.selectbox(
-        "เลือกปี พ.ศ. ที่ต้องการดูผล",
-        list(year_display.keys()),
-        key="year_select"
+def translate_sugar(value):
+    if value == "":
+        return "-"
+    v = value.lower()
+    if v == "negative":
+        return "ไม่พบน้ำตาลในปัสสาวะ"
+    elif v == "trace":
+        return "พบน้ำตาลในปัสสาวะเล็กน้อย"
+    elif v in ["1+", "2+", "3+", "4+", "5+", "6+"]:
+        return "พบน้ำตาลในปัสสาวะ"
+    return "-"
+
+def translate_rbc(value):
+    if value == "":
+        return "-"
+    v = value.lower()
+    if v in ["negative", "0-1", "1-2", "2-3", "3-5"]:
+        return "ปกติ"
+    elif v in ["5-10", "10-20"]:
+        return "พบเม็ดเลือดแดงในปัสสาวะเล็กน้อย"
+    else:
+        return "พบเม็ดเลือดแดงในปัสสาวะ"
+
+def translate_wbc(value):
+    if value == "":
+        return "-"
+    v = value.lower()
+    if v in ["negative", "0-1", "1-2", "2-3", "3-5"]:
+        return "ปกติ"
+    elif v in ["5-10", "10-20"]:
+        return "พบเม็ดเลือดขาวในปัสสาวะเล็กน้อย"
+    else:
+        return "พบเม็ดเลือดขาวในปัสสาวะ"
+
+# --- ฟังก์ชันคำแนะนำ ---
+def urine_advice_interpret(sex, alb_text, sugar_text, rbc_text, wbc_text, urine_result):
+    if urine_result == "":
+        return ""
+
+    if urine_result == "ปัสสาวะปกติ":
+        return "ผลตรวจอยู่ในเกณฑ์ปกติ ควรดื่มน้ำให้เพียงพอ และตรวจสุขภาพประจำปีอย่างสม่ำเสมอ"
+
+    if "พบน้ำตาล" in sugar_text:
+        return "แนะนำตรวจน้ำตาลในเลือดเพื่อติดตามภาวะเบาหวาน"
+
+    if sex == "หญิง" and "พบเม็ดเลือดแดง" in rbc_text:
+        return "อาจมีประจำเดือนปน ควรตรวจซ้ำ หากผิดปกติให้พบแพทย์"
+
+    if sex == "ชาย" and "พบเม็ดเลือดแดง" in rbc_text:
+        return "อาจมีเลือดปนปัสสาวะ ควรตรวจซ้ำหรือตรวจเพิ่มเติมกับแพทย์"
+
+    if "พบเม็ดเลือดขาว" in wbc_text:
+        return "อาจมีการติดเชื้อทางเดินปัสสาวะ ดื่มน้ำมาก ๆ และไม่ควรกลั้นปัสสาวะ"
+
+    if urine_result == "ผลปัสสาวะผิดปกติ":
+        return "ควรตรวจปัสสาวะซ้ำ หากมีอาการควรพบแพทย์"
+
+    return ""
+
+# --- ดึงข้อมูล ---
+urine_key = f"ผลปัสสาวะ{selected_year}" if selected_year < 68 else "ผลปัสสาวะ"
+urine_result = person.get(urine_key, "").strip()
+
+alb_raw = person.get(f"Alb{selected_year}", "").strip()
+sugar_raw = person.get(f"sugar{selected_year}", "").strip()
+rbc_raw = person.get(f"RBC1{selected_year}", "").strip()
+wbc_raw = person.get(f"WBC1{selected_year}", "").strip()
+
+# --- แปลผล ---
+alb_text = translate_alb(alb_raw)
+sugar_text = translate_sugar(sugar_raw)
+rbc_text = translate_rbc(rbc_raw)
+wbc_text = translate_wbc(wbc_raw)
+
+# --- สรุปผลอัตโนมัติ หากยังไม่กรอก ---
+if not urine_result:
+    if any("พบ" in val for val in [alb_text, sugar_text, rbc_text, wbc_text]):
+        urine_result = "ผลปัสสาวะผิดปกติ"
+
+# --- แสดงผล ---
+if urine_result or alb_raw or sugar_raw or rbc_raw or wbc_raw:
+    st.markdown(f"### 💧 ผลการตรวจปัสสาวะ ปี พ.ศ. 25{selected_year}")
+    st.markdown(f"- **สรุปผลรวม:** {urine_result if urine_result else '-'}")
+
+    st.markdown("#### รายละเอียด")
+    st.markdown(f"""
+    - **โปรตีนในปัสสาวะ:** {alb_raw or '-'} ({alb_text})
+    - **น้ำตาลในปัสสาวะ:** {sugar_raw or '-'} ({sugar_text})
+    - **เม็ดเลือดแดง:** {rbc_raw or '-'} ({rbc_text})
+    - **เม็ดเลือดขาว:** {wbc_raw or '-'} ({wbc_text})
+    """)
+
+    urine_advice = urine_advice_interpret(
+        sex=person.get("เพศ", ""),
+        alb_text=alb_text,
+        sugar_text=sugar_text,
+        rbc_text=rbc_text,
+        wbc_text=wbc_text,
+        urine_result=urine_result
     )
-    selected_year = year_display[selected_label]
 
-    # ===== ปลอดภัย: ใช้ selected_year ได้หลังตรงนี้เท่านั้น =====
-    urine_key = f"ผลปัสสาวะ{selected_year}" if selected_year < 68 else "ผลปัสสาวะ"
-    urine_result = person.get(urine_key, "").strip()
-
-    alb_raw = person.get(f"Alb{selected_year}", "").strip()
-    sugar_raw = person.get(f"sugar{selected_year}", "").strip()
-    rbc_raw = person.get(f"RBC1{selected_year}", "").strip()
-    wbc_raw = person.get(f"WBC1{selected_year}", "").strip()
-
-    alb_text = translate_alb(alb_raw)
-    sugar_text = translate_sugar(sugar_raw)
-    rbc_text = translate_rbc(rbc_raw)
-    wbc_text = translate_wbc(wbc_raw)
-
-    if not urine_result:
-        if any("พบ" in val for val in [alb_text, sugar_text, rbc_text, wbc_text]):
-            urine_result = "ผลปัสสาวะผิดปกติ"
-
-    if urine_result or alb_raw or sugar_raw or rbc_raw or wbc_raw:
-        st.markdown(f"### 💧 ผลการตรวจปัสสาวะ ปี พ.ศ. 25{selected_year}")
-        st.markdown(f"- **สรุปผลรวม:** {urine_result if urine_result else '-'}")
-        st.markdown("#### รายละเอียด")
-        st.markdown(f"""
-        - **โปรตีนในปัสสาวะ:** {alb_raw or '-'} ({alb_text})
-        - **น้ำตาลในปัสสาวะ:** {sugar_raw or '-'} ({sugar_text})
-        - **เม็ดเลือดแดง:** {rbc_raw or '-'} ({rbc_text})
-        - **เม็ดเลือดขาว:** {wbc_raw or '-'} ({wbc_text})
-        """)
-
-        urine_advice = urine_advice_interpret(
-            sex=person.get("เพศ", ""),
-            alb_text=alb_text,
-            sugar_text=sugar_text,
-            rbc_text=rbc_text,
-            wbc_text=wbc_text,
-            urine_result=urine_result
-        )
-
-        if urine_advice:
-            st.warning(f"📌 คำแนะนำ: {urine_advice}")
+    if urine_advice:
+        st.warning(f"📌 คำแนะนำ: {urine_advice}")
