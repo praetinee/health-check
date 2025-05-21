@@ -124,7 +124,7 @@ if submitted:
 if "person" in st.session_state:
     person = st.session_state["person"]
 # แสดงชื่อและข้อมูลผู้ป่วยแบบตัวใหญ่
-    st.markdown(f"<h3 style='margin-bottom: 0;'>✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}</h3>", unsafe_allow_html=True)
+    st.success(f"✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}")
 
     st.markdown(f"""
     <h3 style='color: #333; margin-top: 0.5rem;'>
@@ -171,7 +171,11 @@ if "person" in st.session_state:
         except:
             bmi_str = "-"
 
-        bp_str = f"{sbp}/{dbp}" if sbp or dbp else "-"
+        try:
+            bp_str = f"{sbp}/{dbp} ({interpret_bp(sbp, dbp)})" if sbp or dbp else "-"
+        except:
+            bp_str = "-"
+
 
         table_data["ปี พ.ศ."].append(y + 2500)
         table_data["น้ำหนัก (กก.)"].append(weight if weight else "-")
@@ -181,6 +185,19 @@ if "person" in st.session_state:
 
     st.dataframe(pd.DataFrame(table_data).set_index("ปี พ.ศ.").T)
 
+    bmi_data = []
+    labels = []
+
+    for y in sorted(years):
+        col = columns_by_year[y]
+        try:
+            bmi_val = float(person.get(col["bmi_value"], 0))
+            if bmi_val > 0:
+                bmi_data.append(bmi_val)
+                labels.append(f"B.E. {y + 2500}")
+        except:
+            continue
+    
     # ==========================
     # GRAPH: BMI + Waist History
     # ==========================
