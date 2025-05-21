@@ -1,3 +1,4 @@
+import numpy as np
 import streamlit as st
 import pandas as pd
 import gspread
@@ -123,9 +124,11 @@ if submitted:
 # ===============================
 if "person" in st.session_state:
     person = st.session_state["person"]
-# แสดงชื่อและข้อมูลผู้ป่วยแบบตัวใหญ่
+
+    # ✅ แสดงชื่อคนไข้ ด้วยแถบเขียว และขนาดใหญ่
     st.success(f"""<span style='font-size: 20px;'>✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}</span>""", unsafe_allow_html=True)
 
+    # ✅ แสดงเลขบัตร / HN / เพศ ด้วยสีขาว (เพื่อ contrast กับพื้นเข้ม)
     st.markdown(f"""
     <h3 style='color: white; margin-top: 0.5rem;'>
     เลขบัตรประชาชน: {person.get('เลขบัตรประชาชน', '-')} &nbsp;&nbsp;&nbsp;&nbsp;
@@ -134,24 +137,10 @@ if "person" in st.session_state:
     </h3>
     """, unsafe_allow_html=True)
 
-
+    # ✅ Dropdown เลือกปี พ.ศ. (แม้ว่าไม่ได้ใช้โดยตรงก็ยังแสดงเพื่อ UI ดีขึ้น)
     selected_year = st.selectbox("เลือกปี พ.ศ.", sorted([y + 2500 for y in years], reverse=True))
-    year = selected_year - 2500
-    cols = columns_by_year.get(year, {})
 
-    weight = person.get(cols["weight"], "")
-    height = person.get(cols["height"], "")
-    waist = person.get(cols["waist"], "")
-    sbp = person.get(cols["sbp"], "")
-    dbp = person.get(cols["dbp"], "")
-    pulse = person.get(cols["pulse"], "")
-    bmi = person.get(cols["bmi_value"], "")
-
-    st.markdown("### 📊 น้ำหนัก / รอบเอว / ความดัน")
-    st.markdown(pd.DataFrame(table_data).set_index("ปี พ.ศ.").T.to_html(escape=False), unsafe_allow_html=True)
-
-
-    # สร้าง DataFrame แสดงผลตรวจรายปี
+    # ✅ สร้างตารางข้อมูลสุขภาพตามปี
     table_data = {
         "ปี พ.ศ.": [],
         "น้ำหนัก (กก.)": [],
@@ -168,11 +157,13 @@ if "person" in st.session_state:
         dbp = person.get(cols["dbp"], "")
         bmi = person.get(cols["bmi_value"], "")
 
+        # ✅ แปลผล BMI
         try:
             bmi_str = f"{bmi} ({interpret_bmi(bmi)})" if bmi else "-"
         except:
             bmi_str = "-"
 
+        # ✅ แปลผลความดัน พร้อมขึ้นบรรทัดใหม่ใน HTML
         try:
             if sbp or dbp:
                 bp_val = f"{sbp}/{dbp}"
@@ -183,14 +174,23 @@ if "person" in st.session_state:
         except:
             bp_str = "-"
 
+        # ✅ ใส่ข้อมูลลงใน dictionary
         table_data["ปี พ.ศ."].append(y + 2500)
         table_data["น้ำหนัก (กก.)"].append(weight if weight else "-")
         table_data["รอบเอว (ซม.)"].append(waist if waist else "-")
         table_data["ความดัน (mmHg)"].append(bp_str)
         table_data["BMI (แปลผล)"].append(bmi_str)
 
-    st.dataframe(pd.DataFrame(table_data).set_index("ปี พ.ศ.").T)
+    # ✅ แสดงผลตาราง (รองรับ HTML <br> ด้วย unsafe_allow_html)
+    st.markdown("### 📊 น้ำหนัก / รอบเอว / ความดัน")
+    html_table = pd.DataFrame(table_data).set_index("ปี พ.ศ.").T.to_html(escape=False)
+    st.markdown(html_table, unsafe_allow_html=True)
 
+    # ==========================
+    # GRAPH: BMI History
+    # ==========================
+
+    # ✅ เตรียมข้อมูล BMI และ labels สำหรับแต่ละปี
     bmi_data = []
     labels = []
 
@@ -203,48 +203,30 @@ if "person" in st.session_state:
                 labels.append(f"B.E. {y + 2500}")
         except:
             continue
-    
-# ==========================
-# GRAPH: BMI History
-# ==========================
 
-# เตรียมข้อมูล BMI และ labels
-bmi_data = []
-labels = []
+    # ✅ วาดกราฟถ้ามีข้อมูล
+    if bmi_data and labels:
+        st.markdown("### 📈 BMI Trend")
+        fig, ax = plt.subplots(figsize=(10, 4))
 
-for y in sorted(years):
-    col = columns_by_year[y]
-    try:
-        bmi_val = float(person.get(col["bmi_value"], 0))
-        if bmi_val > 0:
-            bmi_data.append(bmi_val)
-            labels.append(f"B.E. {y + 2500}")
-    except:
-        continue
+        # 🔵 โซนสีแบ่งระดับ BMI
+        ax.axhspan(0, 18.5, facecolor='#D0E6F7', alpha=0.4, label='Underweight')
+        ax.axhspan(18.5, 23, facecolor='#B7F7C6', alpha=0.4, label='Normal')
+        ax.axhspan(23, 25, facecolor='#FFFACD', alpha=0.4, label='Overweight')
+        ax.axhspan(25, 30, facecolor='#FFD580', alpha=0.4, label='Obese')
+        ax.axhspan(30, 40, facecolor='#FFA07A', alpha=0.4, label='Severely Obese')
 
-# วาดกราฟหากมีข้อมูล
-if bmi_data and labels:
-    st.markdown("### 📈 BMI Trend")
-    fig, ax = plt.subplots(figsize=(10, 4))
+        # 📈 วาดเส้นกราฟ BMI
+        ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', label="BMI")
 
-    # โซนสีพื้นหลังตามช่วงค่า BMI
-    ax.axhspan(0, 18.5, facecolor='#D0E6F7', alpha=0.4, label='Underweight')
-    ax.axhspan(18.5, 23, facecolor='#B7F7C6', alpha=0.4, label='Normal')
-    ax.axhspan(23, 25, facecolor='#FFFACD', alpha=0.4, label='Overweight')
-    ax.axhspan(25, 30, facecolor='#FFD580', alpha=0.4, label='Obese')
-    ax.axhspan(30, 40, facecolor='#FFA07A', alpha=0.4, label='Severely Obese')
+        # 🎯 ตกแต่งกราฟ
+        ax.set_xticks(np.arange(len(labels)))
+        ax.set_xticklabels(labels)
+        ax.set_ylabel("BMI")
+        ax.set_ylim(15, 40)
+        ax.set_title("BMI Over Time")
+        ax.legend(loc="upper left")
 
-    # เส้นกราฟ BMI
-    ax.plot(np.arange(len(labels)), bmi_data, marker='o', color='black', label="BMI")
-
-    # ตกแต่งกราฟ
-    ax.set_xticks(np.arange(len(labels)))
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("BMI")
-    ax.set_ylim(15, 40)
-    ax.set_title("BMI Over Time")
-    ax.legend(loc="upper left")
-
-    st.pyplot(fig)
-else:
-    st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
+        st.pyplot(fig)
+    else:
+        st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
