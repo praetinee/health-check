@@ -134,7 +134,6 @@ if "person_data" in st.session_state:
             f"ผลเอกซเรย์{y}",
             f"วัคซีน{y}",
             f"ตรวจตา{y}",
-            f"ผลตรวจอื่น{y}"
         ]
 
         if any([
