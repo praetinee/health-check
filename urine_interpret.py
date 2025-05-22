@@ -1,4 +1,10 @@
+value = value.strip().lower()
+
 def interpret_alb(value):
+    if not value:
+        return "-"
+    value = value.strip().lower()
+
     if value == "":
         return "-"
     if value.lower() == "negative":
@@ -10,6 +16,10 @@ def interpret_alb(value):
     return "-"
 
 def interpret_sugar(value):
+    if not value:
+        return "-"
+    value = value.strip().lower()
+    
     if value == "":
         return "-"
     if value.lower() == "negative":
@@ -20,7 +30,13 @@ def interpret_sugar(value):
         return "พบน้ำตาลในปัสสาวะ"
     return "-"
 
+value = value.strip().lower()
+
 def interpret_rbc(value):
+    if not value:
+        return "-"
+    value = value.strip().lower()
+
     if value == "":
         return "-"
     if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
@@ -31,6 +47,10 @@ def interpret_rbc(value):
         return "พบเม็ดเลือดแดงในปัสสาวะ"
 
 def interpret_wbc(value):
+    if not value:
+        return "-"
+    value = value.strip().lower()
+    
     if value == "":
         return "-"
     if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
