@@ -399,9 +399,8 @@ if "person" in st.session_state:
     latest_year_be = max(years) + 2500
     if advice_latest and advice_latest != "-":
         st.markdown(f"""
-        <div style='margin-top:10px; padding: 10px 0px;'>
-          <div style='font-size:15px; font-weight:600;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
-          <div style='font-size:13px; color:inherit;'>{advice_latest}</div>
+        <div style='background-color:#fff3cd; padding: 10px 16px; border-radius:6px; margin-top: 10px;'>
+          <div style='font-size:14px; font-weight:600;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
+          <div style='font-size:14px; margin-top:4px;'>{advice_latest}</div>
         </div>
         """, unsafe_allow_html=True)
-
