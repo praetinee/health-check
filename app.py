@@ -21,3 +21,25 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 df = load_data()
+
+with st.form("search_form"):
+    col1, col2, col3 = st.columns(3)
+    id_card = col1.text_input("เลขบัตรประชาชน")
+    hn = col2.text_input("HN")
+    full_name = col3.text_input("ชื่อ-สกุล")
+    submitted = st.form_submit_button("ค้นหา")  # ✅ สร้างตัวแปรตรงนี้เท่านั้น!
+
+# ✅ หลังจาก form เสร็จแล้ว ถึงใช้ได้
+if submitted:
+    query = df.copy()
+    if id_card.strip():
+        query = query[query["เลขบัตรประชาชน"] == id_card.strip()]
+    if hn.strip():
+        query = query[query["HN"] == hn.strip()]
+    if full_name.strip():
+        query = query[query["ชื่อ-สกุล"].str.strip() == full_name.strip()]
+
+    if query.empty:
+        st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
+    else:
+        st.session_state["person"] = query.iloc[0]
