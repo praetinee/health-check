@@ -24,8 +24,6 @@ def interpret_sugar(value):
         return "พบน้ำตาลในปัสสาวะ"
     return "-"
 
-value = value.strip().lower()
-
 def interpret_rbc(value):
     if not value:
         return "-"
@@ -82,4 +80,3 @@ def advice_urine(sex, alb, sugar, rbc, wbc):
         return "อาจมีการอักเสบของระบบทางเดินปัสสาวะ แนะนำให้ตรวจซ้ำ"
 
     return "ควรตรวจปัสสาวะซ้ำเพื่อติดตามผล"
-
