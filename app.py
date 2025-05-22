@@ -312,7 +312,7 @@ if "person" in st.session_state:
         return "-"
     
     def advice_urine(sex, alb, sugar, rbc, wbc):
-        if all(x == "" for x in [alb, sugar, rbc, wbc]):
+        if all(x.strip() in ["", "-"] for x in [alb, sugar, rbc, wbc]):
             return "-"
             
         alb_text = interpret_alb(alb)
