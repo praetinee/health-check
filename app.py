@@ -394,18 +394,34 @@ if "person" in st.session_state:
     st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
     
     # ===============================
-    # แสดงคำแนะนำล่าสุด
+    # แสดงคำแนะนำปี 68 หรือมากกว่า
     # ===============================
-    latest_year_be = max(years) + 2500
-    if advice_latest and advice_latest != "-":
-        st.markdown(f"""
-        <div style='
-            background-color: rgba(255, 215, 0, 0.2);
-            padding: 1rem;
-            border-radius: 6px;
-            color: white;
-        '>
-            <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
-            <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_latest}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    latest_year = None
+    for y in reversed(years):
+        if y >= 68:
+            y_label = str(y)
+            if any(person.get(f"{prefix}{y_label}", "").strip() for prefix in ["Alb", "sugar", "RBC1", "WBC1"]):
+                latest_year = y
+                break
+    
+    if latest_year is not None:
+        y_label = str(latest_year)
+        alb_raw = person.get(f"Alb{y_label}", "").strip()
+        sugar_raw = person.get(f"sugar{y_label}", "").strip()
+        rbc_raw = person.get(f"RBC1{y_label}", "").strip()
+        wbc_raw = person.get(f"WBC1{y_label}", "").strip()
+        advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+    else:
+        advice_latest = "-"
+    
+    st.markdown(f"""
+    <div style='
+        background-color: rgba(255, 215, 0, 0.2);
+        padding: 1rem;
+        border-radius: 6px;
+        color: white;
+    '>
+        <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี 2568</div>
+        <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_latest}</div>
+    </div>
+    """, unsafe_allow_html=True)
