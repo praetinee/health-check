@@ -389,7 +389,7 @@ if "person" in st.session_state:
     # ===============================
     # แสดงผลตาราง
     # ===============================
-    st.markdown("### 🚽 ผลตรวจปัสสาวะ (ปี 2561–2568)")
+    st.markdown("### 🚽 ผลตรวจปัสสาวะ")
     urine_df = pd.DataFrame.from_dict(urine_table, orient="index", columns=[y + 2500 for y in years])
     st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
     
