@@ -569,9 +569,9 @@ if "person" in st.session_state:
         y_label = "" if y == 68 else str(y)
         year_be = y + 2500
     
-        wbc_raw = person.get(f"WBC (cumm){y_label}", "").strip()
-        hb_raw = person.get(f"Hb(%){y_label}", "").strip()
-        plt_raw = person.get(f"Plt (/mm){y_label}", "").strip()
+        wbc_raw = str(person.get(f"WBC (cumm){y_label}", "")).strip()
+        hb_raw = str(person.get(f"Hb(%){y_label}", "")).strip()
+        plt_raw = str(person.get(f"Plt (/mm){y_label}", "")).strip()
     
         blood_table["เม็ดเลือดขาว (WBC)"].append(interpret_wbc(wbc_raw))
         blood_table["ความเข้มข้นของเลือด (Hb%)"].append(interpret_hb(hb_raw, sex))
