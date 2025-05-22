@@ -5,9 +5,7 @@ def interpret_alb(value):
         return "-"
     value = value.strip().lower()
 
-    if value == "":
-        return "-"
-    if value.lower() == "negative":
+    if value == "negative":
         return "ไม่พบ"
     elif value in ["trace", "1+", "2+"]:
         return "พบโปรตีนในปัสสาวะเล็กน้อย"
@@ -19,10 +17,8 @@ def interpret_sugar(value):
     if not value:
         return "-"
     value = value.strip().lower()
-    
-    if value == "":
-        return "-"
-    if value.lower() == "negative":
+
+    if value == "negative":
         return "ไม่พบ"
     elif value == "trace":
         return "พบน้ำตาลในปัสสาวะเล็กน้อย"
@@ -37,8 +33,6 @@ def interpret_rbc(value):
         return "-"
     value = value.strip().lower()
 
-    if value == "":
-        return "-"
     if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
         return "ปกติ"
     elif value in ["5-10", "10-20"]:
@@ -50,9 +44,7 @@ def interpret_wbc(value):
     if not value:
         return "-"
     value = value.strip().lower()
-    
-    if value == "":
-        return "-"
+
     if value in ["0-1", "negative", "1-2", "2-3", "3-5"]:
         return "ปกติ"
     elif value in ["5-10", "10-20"]:
@@ -82,10 +74,10 @@ def advice_urine(sex, alb, sugar, rbc, wbc):
     if "พบน้ำตาลในปัสสาวะ" in sugar_text and "เล็กน้อย" not in sugar_text:
         return "ควรลดการบริโภคน้ำตาล และตรวจระดับน้ำตาลในเลือดเพิ่มเติม"
 
-    if sex == "หญิง" and "พบเม็ดเลือดแดง" in rbc_text and "ปกติ" in wbc_text:
+    if sex == "หญิง" and "พบเม็ดเลือดแดง" in rbc_text and wbc_text == "ปกติ":
         return "อาจมีปนเปื้อนจากประจำเดือน แนะนำให้ตรวจซ้ำ"
 
-    if sex == "ชาย" and "พบเม็ดเลือดแดง" in rbc_text and "ปกติ" in wbc_text:
+    if sex == "ชาย" and "พบเม็ดเลือดแดง" in rbc_text and wbc_text == "ปกติ":
         return "พบเม็ดเลือดแดงในปัสสาวะ ควรตรวจทางเดินปัสสาวะเพิ่มเติม"
 
     if "พบเม็ดเลือดขาวในปัสสาวะ" in wbc_text and "เล็กน้อย" not in wbc_text:
