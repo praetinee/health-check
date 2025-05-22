@@ -400,7 +400,8 @@ if "person" in st.session_state:
     if advice_latest and advice_latest != "-":
         st.markdown(f"""
         <div style='background-color:#fff3cd; padding: 10px 16px; border-radius:6px; margin-top: 10px;'>
-          <div style='font-size:14px; font-weight:600;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
-          <div style='font-size:14px; margin-top:4px;'>{advice_latest}</div>
+          <div style='font-size:14px; font-weight:600; color: #000;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
+          <div style='font-size:14px; color: #000; margin-top:4px;'>{advice_latest}</div>
         </div>
         """, unsafe_allow_html=True)
+
