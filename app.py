@@ -400,7 +400,7 @@ if "person" in st.session_state:
     if advice_latest and advice_latest != "-":
         st.markdown(f"""
         <div style='
-            background-color: rgba(255, 215, 0, 0.12);
+            background-color: rgba(255, 215, 0, 0.2);
             padding: 1rem;
             border-radius: 6px;
             color: white;
