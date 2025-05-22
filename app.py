@@ -444,7 +444,7 @@ if "person" in st.session_state:
     
         if advice and advice != "-":
             st.markdown(
-                f"""<div style='background-color: rgba(255, 255, 150, 0.15); padding: 12px; border-radius: 8px; margin-top: 10px;'>
+                f"""<div style='background-color: rgba(255, 255, 150, 0.2); padding: 12px; border-radius: 8px; margin-top: 10px;'>
                 <div style='font-size: 15px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี {y + 2500}</div>
                 <div style='font-size: 15px;'>{advice}</div>
                 </div>""",
