@@ -436,3 +436,58 @@ if "person" in st.session_state:
         <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_latest}</div>
     </div>
     """, unsafe_allow_html=True)
+
+    # ===============================
+    # DISPLAY: STOOL TEST
+    # ===============================
+    
+    def interpret_stool_exam(value):
+        if not value or value.strip() == "":
+            return "-"
+        if "ปกติ" in value:
+            return "ผลอุจจาระปกติ"
+        elif "เม็ดเลือดแดง" in value:
+            return "พบเม็ดเลือดแดงในอุจจาระ นัดตรวจซ้ำ"
+        elif "เม็ดเลือดขาว" in value:
+            return "พบเม็ดเลือดขาวในอุจจาระ นัดตรวจซ้ำ"
+        return value.strip()
+    
+    def interpret_stool_cs(value, is_latest=False):
+        if not value or value.strip() == "":
+            return "-"
+        if "ไม่พบ" in value or "ปกติ" in value:
+            return "ไม่พบการติดเชื้อ"
+        if is_latest:
+            return "พบการติดเชื้อในอุจจาระ ให้พบแพทย์เพื่อตรวจรักษาเพิ่มเติม"
+        return "พบการติดเชื้อในอุจจาระ"
+    
+    st.markdown("### 💩 ผลตรวจอุจจาระ")
+    
+    stool_table = {
+        "ผลตรวจอุจจาระทั่วไป": [],
+        "ผลเพาะเชื้ออุจจาระ": []
+    }
+    
+    latest_year = max(years)
+    
+    for y in years:
+        y_label = "" if y == 68 else str(y)
+        year_be = y + 2500
+    
+        exam_col = f"Stool exam{y_label}"
+        cs_col = f"Stool C/S{y_label}"
+    
+        exam_raw = person.get(exam_col, "").strip()
+        cs_raw = person.get(cs_col, "").strip()
+    
+        is_latest = y == latest_year
+    
+        exam_text = interpret_stool_exam(exam_raw)
+        cs_text = interpret_stool_cs(cs_raw, is_latest=is_latest)
+    
+        stool_table["ผลตรวจอุจจาระทั่วไป"].append(exam_text)
+        stool_table["ผลเพาะเชื้ออุจจาระ"].append(cs_text)
+    
+    # แสดงเป็น DataFrame
+    stool_df = pd.DataFrame.from_dict(stool_table, orient="index", columns=[y + 2500 for y in years])
+    st.markdown(stool_df.to_html(escape=False), unsafe_allow_html=True)
