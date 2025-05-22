@@ -524,14 +524,14 @@ if "person" in st.session_state:
                 elif 12 <= hb < 13:
                     return "พบภาวะโลหิตจางเล็กน้อย"
                 else:
-                    return "ความเข้มข้นของเลือดปกติ"
+                    return "ปกติ"
             elif sex == "หญิง":
                 if hb < 11:
                     return "พบภาวะโลหิตจาง"
                 elif 11 <= hb < 12:
                     return "พบภาวะโลหิตจางเล็กน้อย"
                 else:
-                    return "ความเข้มข้นของเลือดปกติ"
+                    return "ปกติ"
         except:
             return "-"
         return "-"
@@ -542,15 +542,15 @@ if "person" in st.session_state:
             if plt == 0:
                 return "-"
             elif 150000 <= plt <= 500000:
-                return "เกล็ดเลือดปกติ"
+                return "ปกติ"
             elif 500000 < plt < 600000:
-                return "เกล็ดเลือดสูงกว่าเกณฑ์ปกติเล็กน้อย"
+                return "สูงกว่าเกณฑ์เล็กน้อย"
             elif plt >= 600000:
-                return "เกล็ดเลือดสูงกว่าเกณฑ์ปกติ"
+                return "สูงกว่าเกณฑ์"
             elif 100000 <= plt < 150000:
-                return "เกล็ดเลือดต่ำกว่าเกณฑ์ปกติเล็กน้อย"
+                return "ต่ำกว่าเกณฑ์เล็กน้อย"
             elif plt < 100000:
-                return "เกล็ดเลือดต่ำกว่าเกณฑ์ปกติ"
+                return "ต่ำกว่าเกณฑ์"
         except:
             return "-"
         return "-"
