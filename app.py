@@ -415,15 +415,15 @@ if "person" in st.session_state:
                 latest_year = y
                 break
     
-    if latest_year is not None:
-        y_label = str(latest_year)
-        alb_raw = person.get(f"Alb{y_label}", "").strip()
-        sugar_raw = person.get(f"sugar{y_label}", "").strip()
-        rbc_raw = person.get(f"RBC1{y_label}", "").strip()
-        wbc_raw = person.get(f"WBC1{y_label}", "").strip()
-        advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
-    else:
-        advice_latest = "-"
+    # อย่าเขียนทับ advice_latest ถ้ามีค่าที่ไม่ใช่ "-"
+    if advice_latest == "-":
+        if latest_year is not None:
+            y_label = str(latest_year)
+            alb_raw = person.get(f"Alb{y_label}", "").strip()
+            sugar_raw = person.get(f"sugar{y_label}", "").strip()
+            rbc_raw = person.get(f"RBC1{y_label}", "").strip()
+            wbc_raw = person.get(f"WBC1{y_label}", "").strip()
+            advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
     
     st.markdown(f"""
     <div style='
