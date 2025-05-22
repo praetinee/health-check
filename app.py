@@ -394,80 +394,18 @@ if "person" in st.session_state:
     st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
     
     # ===============================
-    # แสดงคำแนะนำ: ปีล่าสุด + ย้อนหลัง (เฉพาะปีที่ผิดปกติ)
+    # แสดงคำแนะนำล่าสุด
     # ===============================
-    
-    # ค้นหาปีที่มีข้อมูลล่าสุดจริง ๆ
-    latest_valid_year = None
-    for y in reversed(years):
-        y_label = str(y) if y != 68 else ""
-        if any(person.get(f"{prefix}{y_label}", "").strip() for prefix in ["Alb", "sugar", "RBC1", "WBC1"]):
-            latest_valid_year = y
-            break
-    
-    # แสดงคำแนะนำปีล่าสุด
-    if latest_valid_year is not None:
-        y = latest_valid_year
-        y_label = str(y) if y != 68 else ""
-        alb_raw = person.get(f"Alb{y_label}", "").strip()
-        sugar_raw = person.get(f"sugar{y_label}", "").strip()
-        rbc_raw = person.get(f"RBC1{y_label}", "").strip()
-        wbc_raw = person.get(f"WBC1{y_label}", "").strip()
-        advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
-        if advice_latest and advice_latest != "-":
-            latest_year_be = y + 2500
-            st.markdown(
-                f"""<div style='background-color: rgba(255, 255, 150, 0.15); padding: 12px; border-radius: 8px; margin-top: 15px;'>
-                <div style='font-size: 15px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
-                <div style='font-size: 15px;'>{advice_latest}</div>
-                </div>""",
-                unsafe_allow_html=True
-            )
-
-    # เพิ่มฟังก์ชันนี้ไว้ "เหนือ" ลูปย้อนหลัง
-def normalize_advice_text(raw):
-    raw = raw.strip()
-    if not raw or raw == "-":
-        return None
-
-    if "ติดเชื้อ" in raw or "ดื่มน้ำมาก" in raw:
-        return "อาจมีการอักเสบของระบบทางเดินปัสสาวะ แนะนำให้ตรวจซ้ำ"
-
-    if "ปนเปื้อน" in raw or "ประจำเดือน" in raw:
-        return "อาจมีปนเปื้อนจากประจำเดือน แนะนำให้ตรวจซ้ำ"
-
-    if "น้ำตาล" in raw and "ในเลือด" in raw:
-        return "ควรลดการบริโภคน้ำตาล และตรวจระดับน้ำตาลในเลือดเพิ่มเติม"
-
-    if "รักษาเดิม" in raw:
-        return "ควรตรวจปัสสาวะซ้ำเพื่อติดตามผล"
-
-    if "ปกติ" in raw:
-        return "ผลปัสสาวะอยู่ในเกณฑ์ปกติ ควรรักษาสุขภาพและตรวจประจำปีสม่ำเสมอ"
-
-    return "ควรตรวจปัสสาวะซ้ำเพื่อติดตามผล"
-    
-    # แสดงคำแนะนำย้อนหลัง (เฉพาะปีที่ผลผิดปกติ และไม่ใช่ปีล่าสุดที่แสดงแล้ว)
-    for y in years:
-        if y == latest_valid_year or y == 68:
-            continue
-        y_label = str(y)
-        summary_col = f"ผลปัสสาวะ{y_label}"
-        advice_col = f"คำแนะนำปัสสาวะ{y_label}"
-    
-        summary = person.get(summary_col, "").strip()
-        if "ผิดปกติ" not in summary:
-            continue
-    
-        advice_raw = person.get(advice_col, "").strip()
-        advice_norm = normalize_advice_text(advice_raw)
-    
-        if advice_norm:
-            st.markdown(
-                f"""<div style='background-color: rgba(255, 255, 150, 0.2); padding: 12px; border-radius: 8px; margin-top: 10px;'>
-                <div style='font-size: 15px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี {y + 2500}</div>
-                <div style='font-size: 15px;'>{advice_norm}</div>
-                </div>""",
-                unsafe_allow_html=True
-            )
-
+    latest_year_be = max(years) + 2500
+    if advice_latest and advice_latest != "-":
+        st.markdown(f"""
+        <div style='
+            background-color: rgba(255, 215, 0, 0.2);
+            padding: 1rem;
+            border-radius: 6px;
+            color: white;
+        '>
+            <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
+            <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_latest}</div>
+        </div>
+        """, unsafe_allow_html=True)
