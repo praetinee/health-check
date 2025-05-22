@@ -371,7 +371,6 @@ if "person" in st.session_state:
         if y >= 68:
             if not any([alb_raw, sugar_raw, rbc_raw, wbc_raw]):
                 summary = "-"
-                advice_latest = "-"
             else:
                 summary = summarize_urine(
                     interpret_alb(alb_raw),
@@ -379,7 +378,7 @@ if "person" in st.session_state:
                     interpret_rbc(rbc_raw),
                     interpret_wbc(wbc_raw)
                 )
-                advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+
         else:
             summary = person.get(summary_col, "").strip() or "-"
             summary = "ผิดปกติ" if "ผิดปกติ" in summary else ("ปกติ" if "ปกติ" in summary else "-")
