@@ -491,3 +491,91 @@ if "person" in st.session_state:
     # แสดงเป็น DataFrame
     stool_df = pd.DataFrame.from_dict(stool_table, orient="index", columns=[y + 2500 for y in years])
     st.markdown(stool_df.to_html(escape=False), unsafe_allow_html=True)
+
+    # ===============================
+    # DISPLAY: BLOOD TEST (CBC)
+    # ===============================
+    
+    def interpret_wbc(wbc):
+        try:
+            wbc = float(wbc)
+            if wbc == 0:
+                return "-"
+            elif 4000 <= wbc <= 10000:
+                return "เม็ดเลือดขาวปกติ"
+            elif 10000 < wbc < 13000:
+                return "เม็ดเลือดขาวสูงกว่าเกณฑ์ปกติเล็กน้อย"
+            elif wbc >= 13000:
+                return "เม็ดเลือดขาวสูงกว่าเกณฑ์ปกติ"
+            elif 3000 < wbc < 4000:
+                return "เม็ดเลือดขาวต่ำกว่าเกณฑ์ปกติเล็กน้อย"
+            elif wbc <= 3000:
+                return "เม็ดเลือดขาวต่ำกว่าเกณฑ์ปกติ"
+        except:
+            return "-"
+        return "-"
+    
+    def interpret_hb(hb, sex):
+        try:
+            hb = float(hb)
+            if sex == "ชาย":
+                if hb < 12:
+                    return "พบภาวะโลหิตจาง"
+                elif 12 <= hb < 13:
+                    return "พบภาวะโลหิตจางเล็กน้อย"
+                else:
+                    return "ความเข้มข้นของเลือดปกติ"
+            elif sex == "หญิง":
+                if hb < 11:
+                    return "พบภาวะโลหิตจาง"
+                elif 11 <= hb < 12:
+                    return "พบภาวะโลหิตจางเล็กน้อย"
+                else:
+                    return "ความเข้มข้นของเลือดปกติ"
+        except:
+            return "-"
+        return "-"
+    
+    def interpret_plt(plt):
+        try:
+            plt = float(plt)
+            if plt == 0:
+                return "-"
+            elif 150000 <= plt <= 500000:
+                return "เกล็ดเลือดปกติ"
+            elif 500000 < plt < 600000:
+                return "เกล็ดเลือดสูงกว่าเกณฑ์ปกติเล็กน้อย"
+            elif plt >= 600000:
+                return "เกล็ดเลือดสูงกว่าเกณฑ์ปกติ"
+            elif 100000 <= plt < 150000:
+                return "เกล็ดเลือดต่ำกว่าเกณฑ์ปกติเล็กน้อย"
+            elif plt < 100000:
+                return "เกล็ดเลือดต่ำกว่าเกณฑ์ปกติ"
+        except:
+            return "-"
+        return "-"
+    
+    st.markdown("### 🩸 ผลตรวจเลือด (CBC)")
+    
+    blood_table = {
+        "เม็ดเลือดขาว (WBC)": [],
+        "ความเข้มข้นของเลือด (Hb%)": [],
+        "เกล็ดเลือด (Plt)": []
+    }
+    
+    sex = person.get("เพศ", "").strip()
+    
+    for y in years:
+        y_label = "" if y == 68 else str(y)
+        year_be = y + 2500
+    
+        wbc_raw = person.get(f"WBC (cumm){y_label}", "").strip()
+        hb_raw = person.get(f"Hb(%){y_label}", "").strip()
+        plt_raw = person.get(f"Plt (/mm){y_label}", "").strip()
+    
+        blood_table["เม็ดเลือดขาว (WBC)"].append(interpret_wbc(wbc_raw))
+        blood_table["ความเข้มข้นของเลือด (Hb%)"].append(interpret_hb(hb_raw, sex))
+        blood_table["เกล็ดเลือด (Plt)"].append(interpret_plt(plt_raw))
+    
+    blood_df = pd.DataFrame.from_dict(blood_table, orient="index", columns=[y + 2500 for y in years])
+    st.markdown(blood_df.to_html(escape=False), unsafe_allow_html=True)
