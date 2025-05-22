@@ -312,6 +312,9 @@ if "person" in st.session_state:
         return "-"
     
     def advice_urine(sex, alb, sugar, rbc, wbc):
+        if all(x == "" for x in [alb, sugar, rbc, wbc]):
+            return "-"
+            
         alb_text = interpret_alb(alb)
         sugar_text = interpret_sugar(sugar)
         rbc_text = interpret_rbc(rbc)
@@ -376,13 +379,17 @@ if "person" in st.session_state:
                 summary = "-"
                 advice_latest = "-"
             else:
-                summary = summarize_urine(
-                    interpret_alb(alb_raw),
-                    interpret_sugar(sugar_raw),
-                    interpret_rbc(rbc_raw),
-                    interpret_wbc(wbc_raw)
-                )
-                advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+                if not any([alb_raw, sugar_raw, rbc_raw, wbc_raw]):
+                    summary = "-"
+                    advice_latest = "-"
+                else:
+                    summary = summarize_urine(
+                        interpret_alb(alb_raw),
+                        interpret_sugar(sugar_raw),
+                        interpret_rbc(rbc_raw),
+                        interpret_wbc(wbc_raw)
+                    )
+                    advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
 
         urine_table["โปรตีน"].append(alb)
         urine_table["น้ำตาล"].append(sugar)
