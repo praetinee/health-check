@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from data_loader import load_data
 from config import years, columns_by_year
 from bmi_utils import interpret_bmi, interpret_bp
@@ -9,9 +10,14 @@ from urine_interpret import (
 
 st.set_page_config(page_title="ระบบรายงานสุขภาพ", layout="wide")
 
-# โหลดข้อมูล
-df = load_data()
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch&display=swap');
 
-# คุณสามารถใส่โค้ด form + แสดงผลเดิมที่อยู่ใน app_backup.py ต่อจากนี้ได้
-st.title("ระบบรายงานสุขภาพ")
-st.write("เริ่มต้นใช้งานแล้ว ✅")
+    html, body, [class*="css"] {
+        font-family: 'Chakra Petch', sans-serif !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+df = load_data()
