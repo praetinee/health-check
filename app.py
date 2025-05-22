@@ -43,3 +43,8 @@ if submitted:
         st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
     else:
         st.session_state["person"] = query.iloc[0]
+
+            if "person" in st.session_state:
+                person = st.session_state["person"]
+                st.success(f"✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}")
+
