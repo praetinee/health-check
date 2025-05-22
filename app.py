@@ -317,8 +317,7 @@ if "person" in st.session_state:
         rbc_text = interpret_rbc(rbc)
         wbc_text = interpret_wbc(wbc)
     
-        # ✅ เช็คหลัง interpret แล้ว
-        if all(x in ["-", "ไม่พบ", "ปกติ", "พบโปรตีนในปัสสาวะเล็กน้อย", "พบน้ำตาลในปัสสาวะเล็กน้อย"]
+        if all(x in ["-", "ปกติ", "ไม่พบ", "พบโปรตีนในปัสสาวะเล็กน้อย", "พบน้ำตาลในปัสสาวะเล็กน้อย"]
                for x in [alb_text, sugar_text, rbc_text, wbc_text]):
             return "ผลปัสสาวะอยู่ในเกณฑ์ปกติ ควรรักษาสุขภาพและตรวจประจำปีสม่ำเสมอ"
     
