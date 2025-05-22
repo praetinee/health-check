@@ -1,5 +1,3 @@
-value = value.strip().lower()
-
 def interpret_alb(value):
     if not value:
         return "-"
