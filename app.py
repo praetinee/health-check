@@ -394,18 +394,59 @@ if "person" in st.session_state:
     st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
     
     # ===============================
-    # แสดงคำแนะนำล่าสุด
+    # แสดงคำแนะนำ: ปีล่าสุด + ย้อนหลัง (เฉพาะปีที่ผิดปกติ)
     # ===============================
-    latest_year_be = max(years) + 2500
-    if advice_latest and advice_latest != "-":
-        st.markdown(f"""
-        <div style='
-            background-color: rgba(255, 215, 0, 0.2);
-            padding: 1rem;
-            border-radius: 6px;
-            color: white;
-        '>
-            <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
-            <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_latest}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    
+    # ค้นหาปีที่มีข้อมูลล่าสุดจริง ๆ
+    latest_valid_year = None
+    for y in reversed(years):
+        y_label = str(y) if y != 68 else ""
+        if any(person.get(f"{prefix}{y_label}", "").strip() for prefix in ["Alb", "sugar", "RBC1", "WBC1"]):
+            latest_valid_year = y
+            break
+    
+    # แสดงคำแนะนำปีล่าสุด
+    if latest_valid_year is not None:
+        y = latest_valid_year
+        y_label = str(y) if y != 68 else ""
+        alb_raw = person.get(f"Alb{y_label}", "").strip()
+        sugar_raw = person.get(f"sugar{y_label}", "").strip()
+        rbc_raw = person.get(f"RBC1{y_label}", "").strip()
+        wbc_raw = person.get(f"WBC1{y_label}", "").strip()
+        advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+        if advice_latest and advice_latest != "-":
+            latest_year_be = y + 2500
+            st.markdown(
+                f"""<div style='background-color: rgba(255, 255, 150, 0.15); padding: 12px; border-radius: 8px; margin-top: 15px;'>
+                <div style='font-size: 15px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
+                <div style='font-size: 15px;'>{advice_latest}</div>
+                </div>""",
+                unsafe_allow_html=True
+            )
+    
+    # แสดงคำแนะนำย้อนหลัง (เฉพาะปีที่ผลผิดปกติ และไม่ใช่ปีล่าสุดที่แสดงแล้ว)
+    for y in years:
+        if y == latest_valid_year:
+            continue
+        y_label = str(y) if y != 68 else ""
+        summary_col = f"ผลปัสสาวะ{y_label}" if y != 68 else None
+        if not summary_col:
+            continue
+        summary = person.get(summary_col, "").strip()
+        if "ผิดปกติ" not in summary:
+            continue
+    
+        alb_raw = person.get(f"Alb{y_label}", "").strip()
+        sugar_raw = person.get(f"sugar{y_label}", "").strip()
+        rbc_raw = person.get(f"RBC1{y_label}", "").strip()
+        wbc_raw = person.get(f"WBC1{y_label}", "").strip()
+        advice = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+    
+        if advice and advice != "-":
+            st.markdown(
+                f"""<div style='background-color: rgba(255, 255, 150, 0.15); padding: 12px; border-radius: 8px; margin-top: 10px;'>
+                <div style='font-size: 15px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี {y + 2500}</div>
+                <div style='font-size: 15px;'>{advice}</div>
+                </div>""",
+                unsafe_allow_html=True
+            )
