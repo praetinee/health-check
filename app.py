@@ -368,25 +368,21 @@ if "person" in st.session_state:
         rbc = f"{rbc_raw}<br><span style='font-size:13px;color:gray;'>{interpret_rbc(rbc_raw)}</span>" if rbc_raw else "-"
         wbc = f"{wbc_raw}<br><span style='font-size:13px;color:gray;'>{interpret_wbc(wbc_raw)}</span>" if wbc_raw else "-"
     
-        if y != 68:
-            summary = person.get(summary_col, "").strip() or "-"
-            summary = "ผิดปกติ" if "ผิดปกติ" in summary else ("ปกติ" if "ปกติ" in summary else "-")
-        else:
+        if y >= 68:
             if not any([alb_raw, sugar_raw, rbc_raw, wbc_raw]):
                 summary = "-"
                 advice_latest = "-"
             else:
-                if not any([alb_raw, sugar_raw, rbc_raw, wbc_raw]):
-                    summary = "-"
-                    advice_latest = "-"
-                else:
-                    summary = summarize_urine(
-                        interpret_alb(alb_raw),
-                        interpret_sugar(sugar_raw),
-                        interpret_rbc(rbc_raw),
-                        interpret_wbc(wbc_raw)
-                    )
-                    advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+                summary = summarize_urine(
+                    interpret_alb(alb_raw),
+                    interpret_sugar(sugar_raw),
+                    interpret_rbc(rbc_raw),
+                    interpret_wbc(wbc_raw)
+                )
+                advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+        else:
+            summary = person.get(summary_col, "").strip() or "-"
+            summary = "ผิดปกติ" if "ผิดปกติ" in summary else ("ปกติ" if "ปกติ" in summary else "-")
 
         urine_table["โปรตีน"].append(alb)
         urine_table["น้ำตาล"].append(sugar)
