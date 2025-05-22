@@ -378,6 +378,14 @@ if "person" in st.session_state:
                     interpret_rbc(rbc_raw),
                     interpret_wbc(wbc_raw)
                 )
+            
+            # สร้าง advice เฉพาะปี 68 เท่านั้น (หรือปรับ y == ปีอื่นก็ได้)
+            if y == 68:
+                advice_latest = (
+                    advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+                    if any([alb_raw, sugar_raw, rbc_raw, wbc_raw])
+                    else "-"
+                )
 
         else:
             summary = person.get(summary_col, "").strip() or "-"
