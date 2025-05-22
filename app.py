@@ -321,21 +321,28 @@ if "person" in st.session_state:
         rbc_text = interpret_rbc(rbc)
         wbc_text = interpret_wbc(wbc)
 
-        if all(x in ["ไม่พบ", "ปกติ", "-"] for x in [alb_text, sugar_text, rbc_text, wbc_text]):
+        # ✅ ปกติทั้งหมด
+        if all(r in ["-", "ปกติ", "ไม่พบ", "พบโปรตีนในปัสสาวะเล็กน้อย", "พบน้ำตาลในปัสสาวะเล็กน้อย"]
+               for r in [alb_text, sugar_text, rbc_text, wbc_text]):
             return "ผลปัสสาวะอยู่ในเกณฑ์ปกติ ควรรักษาสุขภาพและตรวจประจำปีสม่ำเสมอ"
 
-        if "พบน้ำตาล" in sugar_text:
+        # ⚠ พบน้ำตาลผิดปกติ
+        if "พบน้ำตาลในปัสสาวะ" in sugar_text and "เล็กน้อย" not in sugar_text:
             return "ควรลดการบริโภคน้ำตาล และตรวจระดับน้ำตาลในเลือดเพิ่มเติม"
 
+        # ⚠ หญิง + RBC ผิดปกติ + WBC ปกติ
         if sex == "หญิง" and "พบเม็ดเลือดแดง" in rbc_text and "ปกติ" in wbc_text:
             return "อาจมีปนเปื้อนจากประจำเดือน แนะนำให้ตรวจซ้ำ"
 
+        # ⚠ ชาย + RBC ผิดปกติ + WBC ปกติ
         if sex == "ชาย" and "พบเม็ดเลือดแดง" in rbc_text and "ปกติ" in wbc_text:
             return "พบเม็ดเลือดแดงในปัสสาวะ ควรตรวจทางเดินปัสสาวะเพิ่มเติม"
 
-        if "พบเม็ดเลือดขาว" in wbc_text and "ปกติ" not in wbc_text:
+        # ⚠ พบเม็ดเลือดขาวผิดปกติ (ยกเว้น "เล็กน้อย")
+        if "พบเม็ดเลือดขาวในปัสสาวะ" in wbc_text and "เล็กน้อย" not in wbc_text:
             return "อาจมีการอักเสบของระบบทางเดินปัสสาวะ แนะนำให้ตรวจซ้ำ"
 
+        # ⚠ กรณีอื่น ๆ
         return "ควรตรวจปัสสาวะซ้ำเพื่อติดตามผล"
 
     # เตรียมตาราง
