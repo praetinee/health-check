@@ -398,4 +398,13 @@ if "person" in st.session_state:
     # ===============================
     latest_year_be = max(years) + 2500
     if advice_latest and advice_latest != "-":
-        st.warning(f"### 📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}\n\n{advice_latest}")
+        st.markdown(
+            f"""
+            <div style="background-color:#fff3cd;padding:1em;border-radius:6px;border-left:6px solid #ffeeba;">
+                <h5 style="margin-bottom:0;">📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</h5>
+                <div style="font-size:15px;margin-top:0.5em;">{advice_latest}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
