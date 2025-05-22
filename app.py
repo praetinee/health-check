@@ -335,14 +335,18 @@ if "person" in st.session_state:
     
         return "ควรตรวจปัสสาวะซ้ำเพื่อติดตามผล"
     
-    
     # ===============================
-    # CREATE TABLE
+    # เตรียมตาราง
     # ===============================
-    urine_table = {}
     sex = person.get("เพศ", "")
     advice_latest = "-"
-    latest_year_be = max(years) + 2500  # ปี พ.ศ. ล่าสุด
+    urine_table = {
+        "โปรตีน": [],
+        "น้ำตาล": [],
+        "เม็ดเลือดแดง": [],
+        "เม็ดเลือดขาว": [],
+        "ผลสรุป": []
+    }
     
     for y in years:
         y_label = str(y) if y != 68 else ""
@@ -376,20 +380,22 @@ if "person" in st.session_state:
             )
             advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
     
-        urine_table[y_be] = [alb, sugar, rbc, wbc, summary]
+        urine_table["โปรตีน"].append(alb)
+        urine_table["น้ำตาล"].append(sugar)
+        urine_table["เม็ดเลือดแดง"].append(rbc)
+        urine_table["เม็ดเลือดขาว"].append(wbc)
+        urine_table["ผลสรุป"].append(summary)
     
     # ===============================
-    # DISPLAY TABLE
+    # แสดงผลตาราง
     # ===============================
     st.markdown("### 🚽 ผลตรวจปัสสาวะ (ปี 2561–2568)")
-    urine_df = pd.DataFrame(
-        urine_table,
-        index=["โปรตีน", "น้ำตาล", "เม็ดเลือดแดง", "เม็ดเลือดขาว", "ผลสรุป"]
-    )
+    urine_df = pd.DataFrame.from_dict(urine_table, orient="index", columns=[y + 2500 for y in years])
     st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
     
     # ===============================
-    # DISPLAY ADVICE BAR
+    # แสดงคำแนะนำล่าสุด
     # ===============================
+    latest_year_be = max(years) + 2500
     if advice_latest and advice_latest != "-":
         st.warning(f"### 📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}\n\n{advice_latest}")
