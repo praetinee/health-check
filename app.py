@@ -300,9 +300,20 @@ if "person" in st.session_state:
             return "พบเม็ดเลือดขาวในปัสสาวะ"
 
     def summarize_urine(*results):
-        if any("พบ" in r and "ปกติ" not in r for r in results if r != "-"):
+        """
+        - ปกติ: ถ้าทุกอย่างปกติ หรือเจอแค่ 'เล็กน้อย' ในโปรตีนหรือน้ำตาล
+        - ผิดปกติ: ถ้ามี 'พบ' แบบเต็ม หรือเจอเม็ดเลือดผิดปกติ
+        """
+        if all(
+            r in ["-", "ปกติ", "ไม่พบ", "พบโปรตีนในปัสสาวะเล็กน้อย", "พบน้ำตาลในปัสสาวะเล็กน้อย"]
+            for r in results
+        ):
+            return "ปกติ"
+        if any("พบ" in r and "เล็กน้อย" not in r for r in results):
             return "ผิดปกติ"
-        return "ปกติ" if any("ปกติ" in r for r in results) else "-"
+        if any("เม็ดเลือดแดง" in r or "เม็ดเลือดขาว" in r for r in results if "ปกติ" not in r):
+            return "ผิดปกติ"
+        return "-"
 
     def advice_urine(sex, alb, sugar, rbc, wbc):
         alb_text = interpret_alb(alb)
