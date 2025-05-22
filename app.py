@@ -399,7 +399,7 @@ if "person" in st.session_state:
     latest_year_be = max(years) + 2500
     if advice_latest and advice_latest != "-":
         st.markdown(f"""
-        <div style='background-color: rgba(255, 255, 150, 0.15); padding: 12px 18px; border-radius:6px; margin-top: 12px;'>
+        <div style='background-color: rgba(255, 255, 150, 0.3); padding: 12px 18px; border-radius:6px; margin-top: 12px;'>
           <div style='font-size:15px; font-weight:600; color: white;'>📌 คำแนะนำผลตรวจปัสสาวะปี {latest_year_be}</div>
           <div style='font-size:14px; color: white; margin-top:4px;'>{advice_latest}</div>
         </div>
