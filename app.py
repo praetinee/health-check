@@ -502,15 +502,15 @@ if "person" in st.session_state:
             if wbc == 0:
                 return "-"
             elif 4000 <= wbc <= 10000:
-                return "เม็ดเลือดขาวปกติ"
+                return "ปกติ"
             elif 10000 < wbc < 13000:
-                return "เม็ดเลือดขาวสูงกว่าเกณฑ์ปกติเล็กน้อย"
+                return "สูงกว่าเกณฑ์เล็กน้อย"
             elif wbc >= 13000:
-                return "เม็ดเลือดขาวสูงกว่าเกณฑ์ปกติ"
+                return "สูงกว่าเกณฑ์ปกติ"
             elif 3000 < wbc < 4000:
-                return "เม็ดเลือดขาวต่ำกว่าเกณฑ์ปกติเล็กน้อย"
+                return "ต่ำกว่าเกณฑ์เล็กน้อย"
             elif wbc <= 3000:
-                return "เม็ดเลือดขาวต่ำกว่าเกณฑ์ปกติ"
+                return "ต่ำกว่าเกณฑ์ปกติ"
         except:
             return "-"
         return "-"
