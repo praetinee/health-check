@@ -445,7 +445,7 @@ if "person" in st.session_state:
         if not value or value.strip() == "":
             return "-"
         if "ปกติ" in value:
-            return "ผลอุจจาระปกติ"
+            return "ปกติ"
         elif "เม็ดเลือดแดง" in value:
             return "พบเม็ดเลือดแดงในอุจจาระ นัดตรวจซ้ำ"
         elif "เม็ดเลือดขาว" in value:
