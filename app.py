@@ -143,21 +143,6 @@ if submitted:
 if "person" in st.session_state:
     person = st.session_state["person"]
 
-    # ✅ UNIVERSAL FIELD FETCHERS
-    def resolve_column_dynamic(person, base_name, years, prefer_latest=True):
-        sorted_years = sorted(years, reverse=prefer_latest)
-        if base_name in person and str(person.get(base_name, "")).strip():
-            return base_name
-        for y in sorted_years:
-            col = f"{base_name}{y if y != 68 else ''}"
-            if col in person and str(person.get(col, "")).strip():
-                return col
-        return None
-
-    def get_field_value(person, base_name, years):
-        col = resolve_column_dynamic(person, base_name, years)
-        return str(person.get(col, "")).strip() if col else "-"
-
     # ✅ แสดงชื่อคนไข้ ด้วยแถบเขียว และขนาดใหญ่
     # ✅ ปลอดภัย ไม่ทำให้ error
     st.success(f"✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}")
@@ -184,12 +169,11 @@ if "person" in st.session_state:
 
     for y in sorted(years):
         cols = columns_by_year[y]  # ✅ ต้องมี
-        weight = get_field_value(person, "น้ำหนัก", [y])
-        height = get_field_value(person, "ส่วนสูง", [y])
-        waist = get_field_value(person, "รอบเอว", [y])
-        sbp = get_field_value(person, "SBP", [y])
-        dbp = get_field_value(person, "DBP", [y])
-        pulse = get_field_value(person, "pulse", [y])
+        weight = person.get(cols["weight"], "")
+        height = person.get(cols["height"], "")
+        waist = person.get(cols["waist"], "")
+        sbp = person.get(cols["sbp"], "")
+        dbp = person.get(cols["dbp"], "")
 
         # ✅ คำนวณ BMI จากน้ำหนักและส่วนสูง
         try:
@@ -232,9 +216,11 @@ if "person" in st.session_state:
     labels = []
 
     for y in sorted(years):
-        weight = get_field_value(person, "น้ำหนัก", [y])
-        height = get_field_value(person, "ส่วนสูง", [y])
-    
+        cols = columns_by_year[y]  # ✅ ต้องอยู่ในลูปเท่านั้น!
+
+        weight = person.get(cols["weight"], "")
+        height = person.get(cols["height"], "")
+
         try:
             weight = float(weight)
             height = float(height)
@@ -268,7 +254,7 @@ if "person" in st.session_state:
         st.info("ไม่มีข้อมูล BMI เพียงพอสำหรับแสดงกราฟ")
 
     # ===============================
-    # DISPLAY: URINE TEST (ปี 2561–2568+)
+    # DISPLAY: URINE TEST (ปี 2561–2568)
     # ===============================
     
     def interpret_alb(value):
@@ -363,20 +349,26 @@ if "person" in st.session_state:
     }
     
     for y in years:
+        y_label = str(y) if y != 68 else ""
         y_be = y + 2500
-        is_latest = y == max(years)
     
-        alb_raw = get_field_value(person, "Alb", [y])
-        sugar_raw = get_field_value(person, "sugar", [y])
-        rbc_raw = get_field_value(person, "RBC1", [y])
-        wbc_raw = get_field_value(person, "WBC1", [y])
+        alb_col = f"Alb{y_label}"
+        sugar_col = f"sugar{y_label}"
+        rbc_col = f"RBC1{y_label}"
+        wbc_col = f"WBC1{y_label}"
+        summary_col = f"ผลปัสสาวะ{y_label}" if y != 68 else None
+    
+        alb_raw = person.get(alb_col, "").strip()
+        sugar_raw = person.get(sugar_col, "").strip()
+        rbc_raw = person.get(rbc_col, "").strip()
+        wbc_raw = person.get(wbc_col, "").strip()
     
         alb = f"{alb_raw}<br><span style='font-size:13px;color:gray;'>{interpret_alb(alb_raw)}</span>" if alb_raw else "-"
         sugar = f"{sugar_raw}<br><span style='font-size:13px;color:gray;'>{interpret_sugar(sugar_raw)}</span>" if sugar_raw else "-"
         rbc = f"{rbc_raw}<br><span style='font-size:13px;color:gray;'>{interpret_rbc(rbc_raw)}</span>" if rbc_raw else "-"
         wbc = f"{wbc_raw}<br><span style='font-size:13px;color:gray;'>{interpret_wbc(wbc_raw)}</span>" if wbc_raw else "-"
     
-        if is_latest:
+        if y >= 68:
             if not any([alb_raw, sugar_raw, rbc_raw, wbc_raw]):
                 summary = "-"
             else:
@@ -386,11 +378,19 @@ if "person" in st.session_state:
                     interpret_rbc(rbc_raw),
                     interpret_wbc(wbc_raw)
                 )
-                advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+            
+            # สร้าง advice เฉพาะปี 68 เท่านั้น (หรือปรับ y == ปีอื่นก็ได้)
+            if y == 68:
+                advice_latest = (
+                    advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+                    if any([alb_raw, sugar_raw, rbc_raw, wbc_raw])
+                    else "-"
+                )
+
         else:
-            summary_raw = get_field_value(person, "ผลปัสสาวะ", [y])
-            summary = "ผิดปกติ" if "ผิดปกติ" in summary_raw else ("ปกติ" if "ปกติ" in summary_raw else "-")
-    
+            summary = person.get(summary_col, "").strip() or "-"
+            summary = "ผิดปกติ" if "ผิดปกติ" in summary else ("ปกติ" if "ปกติ" in summary else "-")
+
         urine_table["โปรตีน"].append(alb)
         urine_table["น้ำตาล"].append(sugar)
         urine_table["เม็ดเลือดแดง"].append(rbc)
@@ -405,8 +405,26 @@ if "person" in st.session_state:
     st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
     
     # ===============================
-    # แสดงคำแนะนำปีล่าสุด
+    # แสดงคำแนะนำปี 68 หรือมากกว่า
     # ===============================
+    latest_year = None
+    for y in reversed(years):
+        if y >= 68:
+            y_label = str(y)
+            if any(person.get(f"{prefix}{y_label}", "").strip() for prefix in ["Alb", "sugar", "RBC1", "WBC1"]):
+                latest_year = y
+                break
+    
+    # อย่าเขียนทับ advice_latest ถ้ามีค่าที่ไม่ใช่ "-"
+    if advice_latest == "-":
+        if latest_year is not None:
+            y_label = str(latest_year)
+            alb_raw = person.get(f"Alb{y_label}", "").strip()
+            sugar_raw = person.get(f"sugar{y_label}", "").strip()
+            rbc_raw = person.get(f"RBC1{y_label}", "").strip()
+            wbc_raw = person.get(f"WBC1{y_label}", "").strip()
+            advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+    
     st.markdown(f"""
     <div style='
         background-color: rgba(255, 215, 0, 0.2);
@@ -414,7 +432,7 @@ if "person" in st.session_state:
         border-radius: 6px;
         color: white;
     '>
-        <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี {max(years)+2500}</div>
+        <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี 2568</div>
         <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_latest}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -453,11 +471,16 @@ if "person" in st.session_state:
     latest_year = max(years)
     
     for y in years:
-        is_latest = y == latest_year
+        y_label = "" if y == 68 else str(y)
+        year_be = y + 2500
     
-        # ✅ ใช้ระบบ dynamic column
-        exam_raw = get_field_value(person, "Stool exam", [y])
-        cs_raw = get_field_value(person, "Stool C/S", [y])
+        exam_col = f"Stool exam{y_label}"
+        cs_col = f"Stool C/S{y_label}"
+    
+        exam_raw = person.get(exam_col, "").strip()
+        cs_raw = person.get(cs_col, "").strip()
+    
+        is_latest = y == latest_year
     
         exam_text = interpret_stool_exam(exam_raw)
         cs_text = interpret_stool_cs(cs_raw, is_latest=is_latest)
