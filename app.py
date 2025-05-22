@@ -312,16 +312,14 @@ if "person" in st.session_state:
         return "-"
     
     def advice_urine(sex, alb, sugar, rbc, wbc):
-        if all(x.strip() in ["", "-"] for x in [alb, sugar, rbc, wbc]):
-            return "-"
-            
         alb_text = interpret_alb(alb)
         sugar_text = interpret_sugar(sugar)
         rbc_text = interpret_rbc(rbc)
         wbc_text = interpret_wbc(wbc)
     
-        if all(r in ["-", "ปกติ", "ไม่พบ", "พบโปรตีนในปัสสาวะเล็กน้อย", "พบน้ำตาลในปัสสาวะเล็กน้อย"]
-               for r in [alb_text, sugar_text, rbc_text, wbc_text]):
+        # ✅ เช็คหลัง interpret แล้ว
+        if all(x in ["-", "ไม่พบ", "ปกติ", "พบโปรตีนในปัสสาวะเล็กน้อย", "พบน้ำตาลในปัสสาวะเล็กน้อย"]
+               for x in [alb_text, sugar_text, rbc_text, wbc_text]):
             return "ผลปัสสาวะอยู่ในเกณฑ์ปกติ ควรรักษาสุขภาพและตรวจประจำปีสม่ำเสมอ"
     
         if "พบน้ำตาลในปัสสาวะ" in sugar_text and "เล็กน้อย" not in sugar_text:
