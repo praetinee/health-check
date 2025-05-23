@@ -490,17 +490,19 @@ if "person" in st.session_state:
             wbc_raw = person.get(f"WBC1{y_label}", "").strip()
             advice_latest = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
     
-    st.markdown(f"""
-    <div style='
-        background-color: rgba(255, 215, 0, 0.2);
-        padding: 1rem;
-        border-radius: 6px;
-        color: white;
-    '>
-        <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี 2568</div>
-        <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_latest}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    # แสดงคำแนะนำเฉพาะถ้าไม่ใช่ "ปกติ" และไม่ใช่ "-"
+    if advice_latest and advice_latest not in ["-", ""] and "ปกติ" not in advice_latest:
+        st.markdown(f"""
+        <div style='
+            background-color: rgba(255, 215, 0, 0.2);
+            padding: 1rem;
+            border-radius: 6px;
+            color: white;
+        '>
+            <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำผลตรวจปัสสาวะปี 2568</div>
+            <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_latest}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     # ===============================
     # DISPLAY: STOOL TEST
