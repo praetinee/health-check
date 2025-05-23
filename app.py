@@ -774,13 +774,9 @@ if "person" in st.session_state:
         """, unsafe_allow_html=True)
 
     # ===============================
-    # DISPLAY: URIC ACID (ผลยูริค)
+    # DISPLAY: URIC ACID (ผลยูริคในเลือด)
     # ===============================
-    
     st.markdown("### 🧪 ผลกรดยูริคในเลือด")
-    
-    # ปีที่รองรับ
-    years = list(range(2561, 2569))  # เพิ่มปีใหม่ได้ง่าย เช่น range(2561, 2571)
     
     # สร้างชื่อคอลัมน์แบบยืดหยุ่นตามปี
     def get_uric_col_name(year):
@@ -801,17 +797,16 @@ if "person" in st.session_state:
     
     # เตรียมตารางผล
     uric_data = []
-    
-    for y in years:
+    for y in range(2561, 2569):
         col_name = get_uric_col_name(y)
-        raw_value = person.get(col_name, "").strip()
+        raw_value = str(person.get(col_name, "") or "").strip()
         result = interpret_uric(raw_value)
         uric_data.append(result)
     
     # สร้าง DataFrame
     uric_df = pd.DataFrame({
         "กรดยูริคในเลือด (mg/dL)": uric_data
-    }, index=[y for y in years]).T
+    }, index=[y for y in range(2561, 2569)]).T
     
     # แสดงผล
     st.markdown(uric_df.to_html(escape=False), unsafe_allow_html=True)
