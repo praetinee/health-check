@@ -678,9 +678,9 @@ if "person" in st.session_state:
     
     years = list(range(2561, 2569))
     
-    alp_raw = person.get(f"ALP{y_label}", "").strip()
-    sgot_raw = person.get(f"SGOT{y_label}", "").strip()
-    sgpt_raw = person.get(f"SGPT{y_label}", "").strip()
+    alp_raw = str(person.get(f"ALP{y_label}", "") or "").strip()
+    sgot_raw = str(person.get(f"SGOT{y_label}", "") or "").strip()
+    sgpt_raw = str(person.get(f"SGPT{y_label}", "") or "").strip()
 
     # ===============================
     # DISPLAY: LIVER TEST (การทำงานของตับ)
