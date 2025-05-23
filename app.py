@@ -672,3 +672,62 @@ if "person" in st.session_state:
             <div style='font-size: 16px; margin-top: 0.3rem;'>{cbc_recommendation}</div>
         </div>
         """, unsafe_allow_html=True)
+
+    import pandas as pd
+
+    years = list(range(2561, 2569))
+    
+    # ข้อมูลตัวอย่าง
+    example_values = {
+        2561: (100, 30, 35),
+        2562: (130, 40, 38),
+        2563: ("", "", ""),
+        2564: (110, 25, 20),
+        2565: (115, 36, 41),
+        2566: (0, 0, 0),
+        2567: (150, 50, 60),
+        2568: (90, 28, 32),
+    }
+    
+    # ฟังก์ชันตีความผล
+    def interpret_liver(alp, sgot, sgpt):
+        def interpret(value, upper_limit):
+            try:
+                value = float(value)
+                if value == 0:
+                    return "-"
+                elif value > upper_limit:
+                    return f"{value}<br><span style='font-size:13px;color:gray;'>สูงกว่าเกณฑ์</span>"
+                else:
+                    return f"{value}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
+            except:
+                return "-"
+    
+        return (
+            interpret(alp, 120),
+            interpret(sgot, 36),
+            interpret(sgpt, 40)
+        )
+    
+    # เตรียมตาราง
+    liver_data = {
+        "ระดับเอนไซม์ ALP<br><span style='font-size:13px;color:gray;'>ช่วยสลายฟอสเฟตและเกี่ยวข้องกับตับและกระดูก</span>": [],
+        "SGOT (AST)<br><span style='font-size:13px;color:gray;'>เอนไซม์จากตับและกล้ามเนื้อ ใช้ประเมินการอักเสบของตับ</span>": [],
+        "SGPT (ALT)<br><span style='font-size:13px;color:gray;'>เอนไซม์เฉพาะของตับ บ่งชี้ภาวะอักเสบของตับ</span>": []
+    }
+    
+    # เติมข้อมูล
+    for y in years:
+        alp, sgot, sgpt = example_values.get(y, ("", "", ""))
+        alp_result, sgot_result, sgpt_result = interpret_liver(alp, sgot, sgpt)
+        liver_data["ระดับเอนไซม์ ALP<br><span style='font-size:13px;color:gray;'>ช่วยสลายฟอสเฟตและเกี่ยวข้องกับตับและกระดูก</span>"].append(alp_result)
+        liver_data["SGOT (AST)<br><span style='font-size:13px;color:gray;'>เอนไซม์จากตับและกล้ามเนื้อ ใช้ประเมินการอักเสบของตับ</span>"].append(sgot_result)
+        liver_data["SGPT (ALT)<br><span style='font-size:13px;color:gray;'>เอนไซม์เฉพาะของตับ บ่งชี้ภาวะอักเสบของตับ</span>"].append(sgpt_result)
+    
+    # สร้าง DataFrame
+    liver_df = pd.DataFrame.from_dict(liver_data, orient="index", columns=years)
+    
+    # แสดงใน Streamlit หรือ Jupyter
+    import streamlit as st
+    st.markdown("### 🧪 ผลตรวจการทำงานของตับ")
+    st.markdown(liver_df.to_html(escape=False), unsafe_allow_html=True)
