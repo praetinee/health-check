@@ -1109,3 +1109,60 @@ if "person" in st.session_state:
     
     # แสดงผล
     st.markdown(ekg_df.to_html(escape=False), unsafe_allow_html=True)
+
+    # ===============================
+    # DISPLAY: ความจุปอด
+    # ===============================
+    import pandas as pd
+    import streamlit as st
+    
+    years = list(range(2561, 2569))  # ปี พ.ศ. ที่รองรับ
+    
+    # ฟังก์ชันแปลผล
+    def interpret_percent(value, threshold):
+        try:
+            val = float(value)
+            return "ปกติ" if val >= threshold else "ต่ำกว่าเกณฑ์"
+        except:
+            return "-"
+    
+    # ดึงค่าจาก person
+    lung_data = {
+        "FVC (%)": [],
+        "FEV1 (%)": [],
+        "FEV1/FVC (%)": []
+    }
+    
+    for y in years:
+        y_label = "" if y == 2568 else str(y % 100)
+        
+        fvc_col = f"FVC เปอร์เซ็นต์{y_label}"
+        fev1_col = f"FEV1เปอร์เซ็นต์{y_label}"
+        ratio_col = f"FEV1/FVC%{y_label}"
+    
+        fvc_raw = str(person.get(fvc_col, "") or "").strip()
+        fev1_raw = str(person.get(fev1_col, "") or "").strip()
+        ratio_raw = str(person.get(ratio_col, "") or "").strip()
+    
+        fvc_result = (
+            f"{fvc_raw}<br><span style='font-size:13px;color:gray;'>{interpret_percent(fvc_raw, 80)}</span>"
+            if fvc_raw else "-"
+        )
+        fev1_result = (
+            f"{fev1_raw}<br><span style='font-size:13px;color:gray;'>{interpret_percent(fev1_raw, 80)}</span>"
+            if fev1_raw else "-"
+        )
+        ratio_result = (
+            f"{ratio_raw}<br><span style='font-size:13px;color:gray;'>{interpret_percent(ratio_raw, 70)}</span>"
+            if ratio_raw else "-"
+        )
+    
+        lung_data["FVC (%)"].append(fvc_result)
+        lung_data["FEV1 (%)"].append(fev1_result)
+        lung_data["FEV1/FVC (%)"].append(ratio_result)
+    
+    # แสดงผล
+    lung_df = pd.DataFrame.from_dict(lung_data, orient="index", columns=[y for y in years])
+    st.markdown("### 🫁 สมรรถภาพปอด")
+    st.markdown(lung_df.to_html(escape=False), unsafe_allow_html=True)
+
