@@ -209,10 +209,6 @@ if submitted:
 if "person" in st.session_state:
     person = st.session_state["person"]
 
-    # Debug ดูข้อมูลทั้งหมดของคนที่เลือก
-    st.write("ข้อมูลผู้ใช้ (debug):")
-    st.write(person)
-
     # ✅ แสดงชื่อคนไข้ ด้วยแถบเขียว และขนาดใหญ่
     # ✅ ปลอดภัย ไม่ทำให้ error
     st.success(f"✅ พบข้อมูลของ: {person.get('ชื่อ-สกุล', '-')}")
