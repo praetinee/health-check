@@ -883,58 +883,45 @@ if "person" in st.session_state:
     # DISPLAY: FBS (ผลตรวจน้ำตาลในเลือด)
     # ===============================
     import pandas as pd
-
-    # ปี พ.ศ. ที่รองรับ
+    import streamlit as st
+    
+    # ===== ปีที่รองรับ =====
     years = list(range(2561, 2569))
     
-    # ฟังก์ชันตีความค่า FBS
+    # ===== ชื่อคอลัมน์ใน Google Sheet =====
+    def get_fbs_column(year):
+        return "FBS" if year == 2568 else f"FBS{str(year)[-2:]}"
+    
+    # ===== ฟังก์ชันแปลผล FBS =====
     def interpret_fbs(value):
         try:
             value = float(value)
             if value == 0:
                 return "-"
             elif 100 <= value < 106:
-                status = "เริ่มสูงเล็กน้อย"
+                return f"{value}<br><span style='font-size:13px;color:gray;'>เริ่มสูงเล็กน้อย</span>"
             elif 106 <= value < 126:
-                status = "สูงเล็กน้อย"
+                return f"{value}<br><span style='font-size:13px;color:gray;'>สูงเล็กน้อย</span>"
             elif value >= 126:
-                status = "สูง"
+                return f"{value}<br><span style='font-size:13px;color:gray;'>สูง</span>"
             else:
-                status = "ปกติ"
-            return f"{value}<br><span style='font-size:13px;color:gray;'>{status}</span>"
+                return f"{value}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
         except:
             return "-"
     
-    # ฟังก์ชันแปลงชื่อคอลัมน์
-    def get_fbs_col(year):
-        return "FBS" if year == 2568 else f"FBS{str(year)[-2:]}"
-    
-    # ❗️จำลองข้อมูลตัวอย่าง (คุณต้องแทนด้วย person จากระบบจริง)
-    person = {
-        "FBS": 92,
-        "FBS67": 108,
-        "FBS66": 127,
-        "FBS65": 99,
-        "FBS64": "",
-        "FBS63": 0,
-        "FBS62": 104,
-        "FBS61": 100,
-    }
-    
-    # สร้างข้อมูลตาราง
+    # ===== เตรียมข้อมูลจาก person =====
     fbs_data = []
+    
     for y in years:
-        col = get_fbs_col(y)
-        raw_val = person.get(col, "")
-        result = interpret_fbs(raw_val)
+        col_name = get_fbs_column(y)
+        raw = str(person.get(col_name, "") or "").strip()
+        result = interpret_fbs(raw)
         fbs_data.append(result)
     
-    # สร้าง DataFrame
+    # ===== สร้าง DataFrame และแสดง =====
     fbs_df = pd.DataFrame({
-        "ระดับน้ำตาลในเลือด (FBS)": fbs_data
-    }, index=[y for y in years]).T
+        "ระดับน้ำตาลในเลือด (FBS) (mg/dL)": fbs_data
+    }, index=years).T
     
-    # ใช้ใน Streamlit
-    import streamlit as st
-    st.markdown("### 🍬 ระดับน้ำตาลในเลือด (FBS)")
+    st.markdown("### 🍬 น้ำตาลในเลือด (FBS)")
     st.markdown(fbs_df.to_html(escape=False), unsafe_allow_html=True)
