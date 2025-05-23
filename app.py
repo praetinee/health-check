@@ -812,58 +812,70 @@ if "person" in st.session_state:
     st.markdown(uric_df.to_html(escape=False), unsafe_allow_html=True)
 
     # ===============================
-    # DISPLAY: KIDNEY FUNCTION (ผลการทำงานของไต)
+    # DISPLAY: KIDNEY FUNCTION (ผลตรวจไต)
     # ===============================
-    st.markdown("### 🧪 ผลการทำงานของไต")
+    
+    st.markdown("### 🧪 การทำงานของไต")
     
     # ปีที่รองรับ
-    kidney_years = list(range(2561, 2569))
+    years = list(range(2561, 2569))
     
-    # สร้างชื่อคอลัมน์แบบยืดหยุ่น
-    def get_kidney_col(base, year):
-        return base if year == 2568 else f"{base}{str(year)[-2:]}"
-    
-    # ฟังก์ชันแปลผล GFR
-    def interpret_gfr(gfr):
+    # ฟังก์ชันแปลผลแต่ละค่า
+    def interpret_bun(value):
         try:
-            gfr = float(gfr)
-            if gfr == 0:
+            value = float(value)
+            if value == 0:
                 return "-"
-            if gfr < 60:
-                return "การทำงานของไตต่ำกว่าเกณฑ์เล็กน้อย"
-            return "ปกติ"
+            elif value < 5 or value > 20:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>ผิดปกติ</span>"
+            else:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
         except:
             return "-"
     
-    # ฟังก์ชันแปลผลทั่วไป
-    def interpret_standard(value, low=None, high=None):
+    def interpret_cr(value):
         try:
-            val = float(value)
-            if val == 0:
+            value = float(value)
+            if value == 0:
                 return "-"
-            if low is not None and val < low:
-                return "ต่ำ"
-            if high is not None and val > high:
-                return "สูง"
-            return "ปกติ"
+            elif value < 0.6 or value > 1.2:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>ผิดปกติ</span>"
+            else:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
         except:
             return "-"
     
-    # เตรียมตาราง
-    kidney_table = {
+    def interpret_gfr(value):
+        try:
+            value = float(value)
+            if value == 0:
+                return "-"
+            elif value < 60:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>ต่ำกว่าเกณฑ์</span>"
+            else:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
+        except:
+            return "-"
+    
+    # เตรียมข้อมูล
+    kidney_data = {
         "BUN (mg/dL)": [],
-        "Creatinine (Cr, mg/dL)": [],
-        "GFR (mL/min/1.73m²)": []
+        "Creatinine (mg/dL)": [],
+        "Estimated GFR (mL/min/1.73m²)": []
     }
     
-    for y in kidney_years:
+    for y in years:
         y_label = "" if y == 2568 else str(y % 100)
     
-        bun_val = str(person.get(f"BUN{y_label}", "")).strip()
-        cr_val = str(person.get(f"Cr{y_label}", "")).strip()
-        gfr_val = str(person.get(f"GFR{y_label}", "")).strip()
+        bun_raw = str(person.get(f"BUN{y_label}", "") or "").strip()
+        cr_raw = str(person.get(f"Cr{y_label}", "") or "").strip()
+        gfr_raw = str(person.get(f"GFR{y_label}", "") or "").strip()
     
-        bun_result = f"{bun_val}<br><span style='font-size:13px;color:gray;'>{interpret_standard(bun_val, 8, 20)}</span>" if bun_val else "-"
-        cr_result = f"{cr_val}<br><span style='font-size:13px;color:gray;'>{interpret_standard(cr_val, 0.5, 1.3)}</span>" if cr_val else "-"
-        gfr_result = f"{gfr_val}<br><span style
+        kidney_data["BUN (mg/dL)"].append(interpret_bun(bun_raw))
+        kidney_data["Creatinine (mg/dL)"].append(interpret_cr(cr_raw))
+        kidney_data["Estimated GFR (mL/min/1.73m²)"].append(interpret_gfr(gfr_raw))
+    
+    # แสดงผลเป็น DataFrame
+    kidney_df = pd.DataFrame.from_dict(kidney_data, orient="index", columns=[y for y in years])
+    st.markdown(kidney_df.to_html(escape=False), unsafe_allow_html=True)
 
