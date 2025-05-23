@@ -683,9 +683,10 @@ if "person" in st.session_state:
     sgpt_raw = person.get(f"SGPT{y_label}", "").strip()
 
     # ===============================
-    # DISPLAY: LIVER TEST
+    # DISPLAY: LIVER TEST (การทำงานของตับ)
     # ===============================
-
+    st.markdown("### 🧪 การทำงานของตับ")
+    
     # ฟังก์ชันตีความผล
     def interpret_liver(alp, sgot, sgpt):
         def interpret(value, upper_limit):
@@ -699,30 +700,32 @@ if "person" in st.session_state:
                     return f"{value}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
             except:
                 return "-"
-    
         return (
             interpret(alp, 120),
             interpret(sgot, 36),
             interpret(sgpt, 40)
         )
     
-    # ✅ หัวตารางแบบเรียบง่าย
+    # สร้างหัวตาราง
     liver_data = {
         "ระดับเอนไซม์ ALP": [],
         "SGOT (AST)": [],
         "SGPT (ALT)": []
     }
     
-    # เติมข้อมูล
+    # ดึงข้อมูลจาก person
     for y in years:
-        alp, sgot, sgpt = example_values.get(y, ("", "", ""))
-        alp_result, sgot_result, sgpt_result = interpret_liver(alp, sgot, sgpt)
+        y_label = "" if y == 2568 else str(y)
+        alp_raw = person.get(f"ALP{y_label}", "").strip()
+        sgot_raw = person.get(f"SGOT{y_label}", "").strip()
+        sgpt_raw = person.get(f"SGPT{y_label}", "").strip()
+    
+        alp_result, sgot_result, sgpt_result = interpret_liver(alp_raw, sgot_raw, sgpt_raw)
+    
         liver_data["ระดับเอนไซม์ ALP"].append(alp_result)
         liver_data["SGOT (AST)"].append(sgot_result)
         liver_data["SGPT (ALT)"].append(sgpt_result)
     
-    # สร้าง DataFrame และแสดง
-    liver_df = pd.DataFrame.from_dict(liver_data, orient="index", columns=years)
-    
-    st.markdown("### 🧪 การทำงานของตับ")
+    # สร้าง DataFrame และแสดงผล
+    liver_df = pd.DataFrame.from_dict(liver_data, orient="index", columns=[y for y in years])
     st.markdown(liver_df.to_html(escape=False), unsafe_allow_html=True)
