@@ -275,7 +275,11 @@ if "person" in st.session_state:
     # ✅ CSS จัดกลางปี พ.ศ. และข้อมูลทั้งหมด
     table_style = """
     <style>
-    th, td {
+    th {
+        text-align: left !important;
+        vertical-align: middle !important;
+    }
+    td {
         text-align: center !important;
         vertical-align: middle !important;
     }
