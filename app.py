@@ -929,7 +929,7 @@ if "person" in st.session_state:
     # ===============================
     # DISPLAY: BLOOD LIPIDS (ไขมันในเลือด)
     # ===============================
-    st.markdown("### 🧪 ไขมันในเลือด")
+    st.markdown("### 🧪 ผลไขมันในเลือด")
     
     # ปี พ.ศ. ที่รองรับ
     years = list(range(2561, 2569))  # 2561–2568
@@ -1037,4 +1037,3 @@ if "person" in st.session_state:
     # แสดงตาราง
     lipid_df = pd.DataFrame.from_dict(lipid_data, orient="index", columns=[y for y in years])
     st.markdown(lipid_df.to_html(escape=False), unsafe_allow_html=True)
-
