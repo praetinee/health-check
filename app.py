@@ -730,7 +730,7 @@ if "person" in st.session_state:
     advice_liver = "-"
     
     for y in years:
-        y_label = "" if y == 2568 else str(y)
+        y_label = "" if y == 2568 else str(y % 100)
         year_be = y
     
         alp_raw = str(person.get(f"ALP{y_label}", "") or "").strip()
