@@ -759,8 +759,8 @@ if "person" in st.session_state:
     liver_df = pd.DataFrame.from_dict(liver_data, orient="index", columns=[y for y in years])
     st.markdown(liver_df.to_html(escape=False), unsafe_allow_html=True)
     
-    # แสดงคำแนะนำเฉพาะปี 2568
-    if advice_liver:
+    # แสดงเฉพาะเมื่อมีความผิดปกติ
+    if advice_liver and advice_liver != "-" and advice_liver != "":
         st.markdown(f"""
         <div style='
             background-color: rgba(100, 221, 23, 0.15);
