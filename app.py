@@ -772,3 +772,46 @@ if "person" in st.session_state:
             <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_liver}</div>
         </div>
         """, unsafe_allow_html=True)
+
+    # ===============================
+    # DISPLAY: URIC ACID (ผลยูริค)
+    # ===============================
+    
+    st.markdown("### 🧪 ผลกรดยูริคในเลือด")
+    
+    # ปีที่รองรับ
+    years = list(range(2561, 2569))  # เพิ่มปีใหม่ได้ง่าย เช่น range(2561, 2571)
+    
+    # สร้างชื่อคอลัมน์แบบยืดหยุ่นตามปี
+    def get_uric_col_name(year):
+        return "Uric Acid" if year == 2568 else f"Uric Acid{str(year)[-2:]}"
+    
+    # ฟังก์ชันแปลผลยูริค
+    def interpret_uric(value):
+        try:
+            value = float(value)
+            if value == 0:
+                return "-"
+            elif value > 7.2:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>สูงกว่าเกณฑ์</span>"
+            else:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
+        except:
+            return "-"
+    
+    # เตรียมตารางผล
+    uric_data = []
+    
+    for y in years:
+        col_name = get_uric_col_name(y)
+        raw_value = person.get(col_name, "").strip()
+        result = interpret_uric(raw_value)
+        uric_data.append(result)
+    
+    # สร้าง DataFrame
+    uric_df = pd.DataFrame({
+        "กรดยูริคในเลือด (mg/dL)": uric_data
+    }, index=[y for y in years]).T
+    
+    # แสดงผล
+    st.markdown(uric_df.to_html(escape=False), unsafe_allow_html=True)
