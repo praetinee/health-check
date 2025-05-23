@@ -674,7 +674,8 @@ if "person" in st.session_state:
         """, unsafe_allow_html=True)
 
     import pandas as pd
-
+    import streamlit as st
+    
     years = list(range(2561, 2569))
     
     # ข้อมูลตัวอย่าง
@@ -709,25 +710,23 @@ if "person" in st.session_state:
             interpret(sgpt, 40)
         )
     
-    # เตรียมตาราง
+    # ✅ หัวตารางแบบเรียบง่าย
     liver_data = {
         "ระดับเอนไซม์ ALP": [],
-        "ระดับเอนไซม์ SGOT (AST)": [],
-        "ระดับเอนไซม์ SGPT (ALT)": []
+        "SGOT (AST)": [],
+        "SGPT (ALT)": []
     }
     
     # เติมข้อมูล
     for y in years:
         alp, sgot, sgpt = example_values.get(y, ("", "", ""))
         alp_result, sgot_result, sgpt_result = interpret_liver(alp, sgot, sgpt)
-        liver_data["ระดับเอนไซม์ ALP<br><span style='font-size:13px;color:gray;'>ช่วยสลายฟอสเฟตและเกี่ยวข้องกับตับและกระดูก</span>"].append(alp_result)
-        liver_data["SGOT (AST)<br><span style='font-size:13px;color:gray;'>เอนไซม์จากตับและกล้ามเนื้อ ใช้ประเมินการอักเสบของตับ</span>"].append(sgot_result)
-        liver_data["SGPT (ALT)<br><span style='font-size:13px;color:gray;'>เอนไซม์เฉพาะของตับ บ่งชี้ภาวะอักเสบของตับ</span>"].append(sgpt_result)
+        liver_data["ระดับเอนไซม์ ALP"].append(alp_result)
+        liver_data["SGOT (AST)"].append(sgot_result)
+        liver_data["SGPT (ALT)"].append(sgpt_result)
     
-    # สร้าง DataFrame
+    # สร้าง DataFrame และแสดง
     liver_df = pd.DataFrame.from_dict(liver_data, orient="index", columns=years)
     
-    # แสดงใน Streamlit หรือ Jupyter
-    import streamlit as st
     st.markdown("### 🧪 การทำงานของตับ")
     st.markdown(liver_df.to_html(escape=False), unsafe_allow_html=True)
