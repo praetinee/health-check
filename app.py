@@ -925,3 +925,116 @@ if "person" in st.session_state:
     
     st.markdown("### 🍬 น้ำตาลในเลือด (FBS)")
     st.markdown(fbs_df.to_html(escape=False), unsafe_allow_html=True)
+
+    # ===============================
+    # DISPLAY: BLOOD LIPIDS (ไขมันในเลือด)
+    # ===============================
+    st.markdown("### 🧪 ไขมันในเลือด")
+    
+    # ปี พ.ศ. ที่รองรับ
+    years = list(range(2561, 2569))  # 2561–2568
+    
+    # แปลผลในแต่ละรายการ
+    def interpret_chol(value):
+        try:
+            val = float(value)
+            if val == 0:
+                return "-"
+            elif val >= 250:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>สูง</span>"
+            elif val <= 200:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
+            else:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>เริ่มสูง</span>"
+        except:
+            return "-"
+    
+    def interpret_tgl(value):
+        try:
+            val = float(value)
+            if val == 0:
+                return "-"
+            elif val >= 250:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>สูง</span>"
+            elif val <= 150:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
+            else:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>เริ่มสูง</span>"
+        except:
+            return "-"
+    
+    def interpret_hdl(value):
+        try:
+            val = float(value)
+            if val == 0:
+                return "-"
+            elif val < 40:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>ต่ำ</span>"
+            else:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
+        except:
+            return "-"
+    
+    def interpret_ldl(value):
+        try:
+            val = float(value)
+            if val == 0:
+                return "-"
+            elif val >= 180:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>สูง</span>"
+            else:
+                return f"{val}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
+        except:
+            return "-"
+    
+    # ฟังก์ชันสรุปไขมันในเลือดตามเกณฑ์สูตร Excel
+    def summarize_lipids(chol_raw, tgl_raw, ldl_raw):
+        try:
+            chol = float(chol_raw)
+            tgl = float(tgl_raw)
+            ldl = float(ldl_raw)
+            if chol == 0 and tgl == 0:
+                return "-"
+            if chol >= 250 or tgl >= 250 or ldl >= 180:
+                return "ไขมันในเลือดสูง"
+            elif chol <= 200 and tgl <= 150:
+                return "ปกติ"
+            else:
+                return "ไขมันในเลือดสูงเล็กน้อย"
+        except:
+            return "-"
+    
+    # เตรียมตาราง
+    lipid_data = {
+        "CHOL": [],
+        "TGL": [],
+        "HDL": [],
+        "LDL": [],
+        "ผลสรุป": []
+    }
+    
+    for y in years:
+        y_label = "" if y == 2568 else str(y % 100)
+    
+        chol_raw = person.get(f"CHOL{y_label}", "").strip()
+        tgl_raw = person.get(f"TGL{y_label}", "").strip()
+        hdl_raw = person.get(f"HDL{y_label}", "").strip()
+        ldl_raw = person.get(f"LDL{y_label}", "").strip()
+    
+        chol_result = interpret_chol(chol_raw)
+        tgl_result = interpret_tgl(tgl_raw)
+        hdl_result = interpret_hdl(hdl_raw)
+        ldl_result = interpret_ldl(ldl_raw)
+    
+        summary_result = summarize_lipids(chol_raw, tgl_raw, ldl_raw)
+    
+        lipid_data["CHOL"].append(chol_result)
+        lipid_data["TGL"].append(tgl_result)
+        lipid_data["HDL"].append(hdl_result)
+        lipid_data["LDL"].append(ldl_result)
+        lipid_data["ผลสรุป"].append(summary_result)
+    
+    # แสดงตาราง
+    lipid_df = pd.DataFrame.from_dict(lipid_data, orient="index", columns=[y for y in years])
+    st.markdown(lipid_df.to_html(escape=False), unsafe_allow_html=True)
+
