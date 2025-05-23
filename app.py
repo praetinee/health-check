@@ -929,7 +929,7 @@ if "person" in st.session_state:
     # ===============================
     # DISPLAY: BLOOD LIPIDS (ไขมันในเลือด)
     # ===============================
-    st.markdown("### 🧪 ผลไขมันในเลือด")
+    st.markdown("### 🧪 ไขมันในเลือด")
     
     # ปี พ.ศ. ที่รองรับ
     years = list(range(2561, 2569))  # 2561–2568
@@ -1074,3 +1074,38 @@ if "person" in st.session_state:
     # แสดงผลในตาราง
     st.markdown(cxr_df.to_html(escape=False), unsafe_allow_html=True)
 
+    # ===============================
+    # DISPLAY: EKG (ผลคลื่นไฟฟ้าหัวใจ)
+    # ===============================
+    
+    st.markdown("### ❤️ ผลคลื่นไฟฟ้าหัวใจ (EKG)")
+    
+    # ปีที่รองรับ
+    years = list(range(2561, 2569))
+    
+    # ฟังก์ชันหาชื่อคอลัมน์ของปีนั้นๆ
+    def get_ekg_col_name(year):
+        return "EKG" if year == 2568 else f"EKG{str(year)[-2:]}"
+    
+    # ฟังก์ชันแปลผล (ถ้าไม่มีข้อมูล ให้แสดง "-")
+    def interpret_ekg(value):
+        if not value or str(value).strip() == "":
+            return "-"
+        return str(value).strip()
+    
+    # เตรียมข้อมูลลงตาราง
+    ekg_data = []
+    
+    for y in years:
+        col_name = get_ekg_col_name(y)
+        raw_value = person.get(col_name, "")
+        result = interpret_ekg(raw_value)
+        ekg_data.append(result)
+    
+    # สร้าง DataFrame แสดงผล
+    ekg_df = pd.DataFrame({
+        "ผลคลื่นไฟฟ้าหัวใจ (EKG)": ekg_data
+    }, index=years).T
+    
+    # แสดงผล
+    st.markdown(ekg_df.to_html(escape=False), unsafe_allow_html=True)
