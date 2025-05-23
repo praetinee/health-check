@@ -711,9 +711,9 @@ if "person" in st.session_state:
     
     # เตรียมตาราง
     liver_data = {
-        "ระดับเอนไซม์ ALP<br><span style='font-size:13px;color:gray;'>ช่วยสลายฟอสเฟตและเกี่ยวข้องกับตับและกระดูก</span>": [],
-        "SGOT (AST)<br><span style='font-size:13px;color:gray;'>เอนไซม์จากตับและกล้ามเนื้อ ใช้ประเมินการอักเสบของตับ</span>": [],
-        "SGPT (ALT)<br><span style='font-size:13px;color:gray;'>เอนไซม์เฉพาะของตับ บ่งชี้ภาวะอักเสบของตับ</span>": []
+        "ระดับเอนไซม์ ALP": [],
+        "ระดับเอนไซม์ SGOT (AST)": [],
+        "ระดับเอนไซม์ SGPT (ALT)": []
     }
     
     # เติมข้อมูล
