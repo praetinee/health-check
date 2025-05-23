@@ -685,47 +685,87 @@ if "person" in st.session_state:
     # ===============================
     # DISPLAY: LIVER TEST (การทำงานของตับ)
     # ===============================
-    st.markdown("### 🧪 การอักเสบของตับ")
+    st.markdown("### 🧪 การทำงานของตับ")
     
-    # ฟังก์ชันตีความผล
-    def interpret_liver(alp, sgot, sgpt):
-        def interpret(value, upper_limit):
-            try:
-                value = float(value)
-                if value == 0:
-                    return "-"
-                elif value > upper_limit:
-                    return f"{value}<br><span style='font-size:13px;color:gray;'>สูงกว่าเกณฑ์</span>"
-                else:
-                    return f"{value}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
-            except:
+    def interpret_liver(value, upper_limit):
+        try:
+            value = float(value)
+            if value == 0:
                 return "-"
-        return (
-            interpret(alp, 120),
-            interpret(sgot, 36),
-            interpret(sgpt, 40)
-        )
+            elif value > upper_limit:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>สูงกว่าเกณฑ์</span>", "สูง"
+            else:
+                return f"{value}<br><span style='font-size:13px;color:gray;'>ปกติ</span>", "ปกติ"
+        except:
+            return "-", "-"
     
-    # สร้างหัวตาราง
+    def summarize_liver(alp_val, sgot_val, sgpt_val):
+        try:
+            alp = float(alp_val)
+            sgot = float(sgot_val)
+            sgpt = float(sgpt_val)
+            if alp == 0 or sgot == 0 or sgpt == 0:
+                return "-"
+            if alp > 120 or sgot > 36 or sgpt > 40:
+                return "การทำงานของตับสูงกว่าเกณฑ์ปกติเล็กน้อย"
+            return "ปกติ"
+        except:
+            return "-"
+    
+    def liver_advice(summary_text):
+        if summary_text == "การทำงานของตับสูงกว่าเกณฑ์ปกติเล็กน้อย":
+            return "ควรลดอาหารไขมันสูงและตรวจติดตามการทำงานของตับซ้ำ"
+        elif summary_text == "ปกติ":
+            return ""
+        return "-"
+    
+    # เตรียมตาราง
     liver_data = {
         "ระดับเอนไซม์ ALP": [],
         "SGOT (AST)": [],
-        "SGPT (ALT)": []
+        "SGPT (ALT)": [],
+        "ผลสรุป": []
     }
     
-    # ดึงข้อมูลจาก person
+    advice_liver = "-"
+    
     for y in years:
         y_label = "" if y == 2568 else str(y)
+        year_be = y
+    
         alp_raw = person.get(f"ALP{y_label}", "").strip()
         sgot_raw = person.get(f"SGOT{y_label}", "").strip()
         sgpt_raw = person.get(f"SGPT{y_label}", "").strip()
     
-        alp_result, sgot_result, sgpt_result = interpret_liver(alp_raw, sgot_raw, sgpt_raw)
+        alp_disp, alp_flag = interpret_liver(alp_raw, 120)
+        sgot_disp, sgot_flag = interpret_liver(sgot_raw, 36)
+        sgpt_disp, sgpt_flag = interpret_liver(sgpt_raw, 40)
     
-        liver_data["ระดับเอนไซม์ ALP"].append(alp_result)
-        liver_data["SGOT (AST)"].append(sgot_result)
-        liver_data["SGPT (ALT)"].append(sgpt_result)
+        summary = summarize_liver(alp_raw, sgot_raw, sgpt_raw)
     
-    # สร้าง DataFrame และแสดงผล
+        liver_data["ระดับเอนไซม์ ALP"].append(alp_disp)
+        liver_data["SGOT (AST)"].append(sgot_disp)
+        liver_data["SGPT (ALT)"].append(sgpt_disp)
+        liver_data["ผลสรุป"].append(summary)
+    
+        # เก็บคำแนะนำเฉพาะปีล่าสุด
+        if y == 2568:
+            advice_liver = liver_advice(summary)
+    
+    # แสดงตาราง
     liver_df = pd.DataFrame.from_dict(liver_data, orient="index", columns=[y for y in years])
     st.markdown(liver_df.to_html(escape=False), unsafe_allow_html=True)
+    
+    # แสดงคำแนะนำเฉพาะปี 2568
+    if advice_liver:
+        st.markdown(f"""
+        <div style='
+            background-color: rgba(100, 221, 23, 0.15);
+            padding: 1rem;
+            border-radius: 6px;
+            color: white;
+        '>
+            <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำผลตรวจตับ ปี 2568</div>
+            <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_liver}</div>
+        </div>
+        """, unsafe_allow_html=True)
