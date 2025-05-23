@@ -661,8 +661,8 @@ if "person" in st.session_state:
     
     cbc_recommendation = cbc_advice(hb_result, wbc_result, plt_result)
     
-    # แสดงคำแนะนำ
-    if cbc_recommendation:
+    # แสดงคำแนะนำ เฉพาะเมื่อมีข้อมูลอย่างน้อย 1 ค่าที่ไม่ใช่ "-"
+    if cbc_recommendation and not all(x == "-" for x in [wbc_result, hb_result, plt_result]):
         st.markdown(f"""
         <div style='
             background-color: rgba(255, 105, 135, 0.15);
