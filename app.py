@@ -176,6 +176,9 @@ if submitted:
 
     if query.empty:
         st.error("❌ ไม่พบข้อมูล กรุณาตรวจสอบอีกครั้ง")
+        if "person" in st.session_state:
+            del st.session_state["person"]  # 👈 ล้างข้อมูลเก่าทันที
+
     else:
         st.session_state["person"] = query.iloc[0]
 
