@@ -1037,3 +1037,40 @@ if "person" in st.session_state:
     # แสดงตาราง
     lipid_df = pd.DataFrame.from_dict(lipid_data, orient="index", columns=[y for y in years])
     st.markdown(lipid_df.to_html(escape=False), unsafe_allow_html=True)
+
+    # ===============================
+    # DISPLAY: CHEST X-RAY (ผลเอกซเรย์)
+    # ===============================
+    
+    st.markdown("### 🩻 ผลเอกซเรย์ (CXR)")
+    
+    # ปีที่รองรับ
+    years = list(range(2561, 2569))
+    
+    # สร้างชื่อคอลัมน์ CXR ตามปี
+    def get_cxr_col_name(year):
+        return "CXR" if year == 2568 else f"CXR{str(year)[-2:]}"
+    
+    # ฟังก์ชันแปลผล (ถ้าค่าไม่มีให้แสดง "-")
+    def interpret_cxr(value):
+        if not value or str(value).strip() == "":
+            return "-"
+        return str(value).strip()
+    
+    # สร้างตารางผล
+    cxr_data = []
+    
+    for y in years:
+        col_name = get_cxr_col_name(y)
+        raw_value = person.get(col_name, "")
+        result = interpret_cxr(raw_value)
+        cxr_data.append(result)
+    
+    # สร้าง DataFrame
+    cxr_df = pd.DataFrame({
+        "ผลเอกซเรย์": cxr_data
+    }, index=years).T
+    
+    # แสดงผลในตาราง
+    st.markdown(cxr_df.to_html(escape=False), unsafe_allow_html=True)
+
