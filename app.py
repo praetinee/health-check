@@ -675,6 +675,10 @@ if "person" in st.session_state:
         </div>
         """, unsafe_allow_html=True)
 
+    # ===============================
+    # DISPLAY: LIVER TEST (การทำงานของตับ)
+    # ===============================
+    
     import pandas as pd
     import streamlit as st
     
@@ -684,9 +688,6 @@ if "person" in st.session_state:
     sgot_raw = str(person.get(f"SGOT{y_label}", "") or "").strip()
     sgpt_raw = str(person.get(f"SGPT{y_label}", "") or "").strip()
 
-    # ===============================
-    # DISPLAY: LIVER TEST (การทำงานของตับ)
-    # ===============================
     st.markdown("### 🧪 การทำงานของตับ")
     
     def interpret_liver(value, upper_limit):
