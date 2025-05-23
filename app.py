@@ -810,3 +810,60 @@ if "person" in st.session_state:
     
     # แสดงผล
     st.markdown(uric_df.to_html(escape=False), unsafe_allow_html=True)
+
+    # ===============================
+    # DISPLAY: KIDNEY FUNCTION (ผลการทำงานของไต)
+    # ===============================
+    st.markdown("### 🧪 ผลการทำงานของไต")
+    
+    # ปีที่รองรับ
+    kidney_years = list(range(2561, 2569))
+    
+    # สร้างชื่อคอลัมน์แบบยืดหยุ่น
+    def get_kidney_col(base, year):
+        return base if year == 2568 else f"{base}{str(year)[-2:]}"
+    
+    # ฟังก์ชันแปลผล GFR
+    def interpret_gfr(gfr):
+        try:
+            gfr = float(gfr)
+            if gfr == 0:
+                return "-"
+            if gfr < 60:
+                return "การทำงานของไตต่ำกว่าเกณฑ์เล็กน้อย"
+            return "ปกติ"
+        except:
+            return "-"
+    
+    # ฟังก์ชันแปลผลทั่วไป
+    def interpret_standard(value, low=None, high=None):
+        try:
+            val = float(value)
+            if val == 0:
+                return "-"
+            if low is not None and val < low:
+                return "ต่ำ"
+            if high is not None and val > high:
+                return "สูง"
+            return "ปกติ"
+        except:
+            return "-"
+    
+    # เตรียมตาราง
+    kidney_table = {
+        "BUN (mg/dL)": [],
+        "Creatinine (Cr, mg/dL)": [],
+        "GFR (mL/min/1.73m²)": []
+    }
+    
+    for y in kidney_years:
+        y_label = "" if y == 2568 else str(y % 100)
+    
+        bun_val = str(person.get(f"BUN{y_label}", "")).strip()
+        cr_val = str(person.get(f"Cr{y_label}", "")).strip()
+        gfr_val = str(person.get(f"GFR{y_label}", "")).strip()
+    
+        bun_result = f"{bun_val}<br><span style='font-size:13px;color:gray;'>{interpret_standard(bun_val, 8, 20)}</span>" if bun_val else "-"
+        cr_result = f"{cr_val}<br><span style='font-size:13px;color:gray;'>{interpret_standard(cr_val, 0.5, 1.3)}</span>" if cr_val else "-"
+        gfr_result = f"{gfr_val}<br><span style
+
