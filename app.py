@@ -1165,6 +1165,8 @@ if "person" in st.session_state:
         fev1_raw = str(person.get(f"FEV1เปอร์เซ็นต์{y_label}", "") or "").strip()
         ratio_raw = str(person.get(f"FEV1/FVC%{y_label}", "") or "").strip()
 
+        # เพิ่มตรงนี้ 👇 เพื่อดูว่าค่าได้มาถูกหรือไม่
+        st.write(f"{y}: FVC={fvc_col}='{fvc_raw}', FEV1={fev1_col}='{fev1_raw}', Ratio={ratio_col}='{ratio_raw}'")
     
         # แสดงค่าพร้อมแปลผล
         fvc_display = format_result(fvc_raw)
