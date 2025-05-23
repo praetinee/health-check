@@ -1113,56 +1113,73 @@ if "person" in st.session_state:
     # ===============================
     # DISPLAY: ความจุปอด
     # ===============================
-    import pandas as pd
-    import streamlit as st
+    st.markdown("### 🫁 สมรรถภาพปอด")
+
+    years = list(range(2561, 2569))  # ขยายปีในอนาคตได้เลย
     
-    years = list(range(2561, 2569))  # ปี พ.ศ. ที่รองรับ
+    def get_col(name: str, y: int) -> str:
+        return name if y == 2568 else f"{name}{str(y)[-2:]}"
     
-    # ฟังก์ชันแปลผล
-    def interpret_percent(value, threshold):
+    def format_result(value, suffix="%"):
         try:
             val = float(value)
-            return "ปกติ" if val >= threshold else "ต่ำกว่าเกณฑ์"
+            return f"{val}<br><span style='font-size:13px;color:gray;'>ปกติ</span>" if val > 0 else "-"
         except:
             return "-"
     
-    # ดึงค่าจาก person
+    # เตรียมข้อมูล
     lung_data = {
         "FVC (%)": [],
         "FEV1 (%)": [],
-        "FEV1/FVC (%)": []
+        "FEV1/FVC (%)": [],
+        "ผลสรุป": []
     }
     
+    def interpret_lung(fvc, fev1, ratio):
+        try:
+            fvc = float(fvc)
+            fev1 = float(fev1)
+            ratio = float(ratio)
+    
+            if fvc > 80 and fev1 > 80 and ratio > 70:
+                return "สมรรถภาพปอดปกติ"
+            elif fvc <= 80 and fev1 > 70 and ratio <= 100:
+                return "พบความผิดปกติแบบปอดจำกัดการขยายตัวเล็กน้อย"
+            elif fvc <= 80 and fev1 <= 70:
+                return "Mixed"
+            elif fvc < 100 and fev1 <= 70 and ratio <= 65:
+                return "พบความผิดปกติแบบหลอดลมอุดกั้นเล็กน้อย"
+            else:
+                return "สรุปไม่ได้"
+        except:
+            return "-"
+    
     for y in years:
-        y_label = "" if y == 2568 else str(y % 100)
-        
+        y_label = "" if y == 2568 else str(y)[-2:]
+    
         fvc_col = f"FVC เปอร์เซ็นต์{y_label}"
         fev1_col = f"FEV1เปอร์เซ็นต์{y_label}"
         ratio_col = f"FEV1/FVC%{y_label}"
     
-        fvc_raw = str(person.get(fvc_col, "") or "").strip()
-        fev1_raw = str(person.get(fev1_col, "") or "").strip()
-        ratio_raw = str(person.get(ratio_col, "") or "").strip()
+        fvc_raw = str(person.get(fvc_col, "")).strip()
+        fev1_raw = str(person.get(fev1_col, "")).strip()
+        ratio_raw = str(person.get(ratio_col, "")).strip()
     
-        fvc_result = (
-            f"{fvc_raw}<br><span style='font-size:13px;color:gray;'>{interpret_percent(fvc_raw, 80)}</span>"
-            if fvc_raw else "-"
-        )
-        fev1_result = (
-            f"{fev1_raw}<br><span style='font-size:13px;color:gray;'>{interpret_percent(fev1_raw, 80)}</span>"
-            if fev1_raw else "-"
-        )
-        ratio_result = (
-            f"{ratio_raw}<br><span style='font-size:13px;color:gray;'>{interpret_percent(ratio_raw, 70)}</span>"
-            if ratio_raw else "-"
-        )
+        # แสดงค่าพร้อมแปลผล
+        fvc_display = format_result(fvc_raw)
+        fev1_display = format_result(fev1_raw)
+        ratio_display = format_result(ratio_raw)
     
-        lung_data["FVC (%)"].append(fvc_result)
-        lung_data["FEV1 (%)"].append(fev1_result)
-        lung_data["FEV1/FVC (%)"].append(ratio_result)
+        # สรุปสมรรถภาพปอด
+        summary = interpret_lung(fvc_raw, fev1_raw, ratio_raw)
     
-    # แสดงผล
-    lung_df = pd.DataFrame.from_dict(lung_data, orient="index", columns=[y for y in years])
-    st.markdown("### 🫁 สมรรถภาพปอด")
+        lung_data["FVC (%)"].append(fvc_display)
+        lung_data["FEV1 (%)"].append(fev1_display)
+        lung_data["FEV1/FVC (%)"].append(ratio_display)
+        lung_data["ผลสรุป"].append(summary)
+    
+    # แสดงตาราง
+    lung_df = pd.DataFrame.from_dict(lung_data, orient="index", columns=years)
     st.markdown(lung_df.to_html(escape=False), unsafe_allow_html=True)
+
 
