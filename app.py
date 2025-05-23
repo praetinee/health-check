@@ -733,9 +733,9 @@ if "person" in st.session_state:
         y_label = "" if y == 2568 else str(y)
         year_be = y
     
-        alp_raw = person.get(f"ALP{y_label}", "").strip()
-        sgot_raw = person.get(f"SGOT{y_label}", "").strip()
-        sgpt_raw = person.get(f"SGPT{y_label}", "").strip()
+        alp_raw = str(person.get(f"ALP{y_label}", "") or "").strip()
+        sgot_raw = str(person.get(f"SGOT{y_label}", "") or "").strip()
+        sgpt_raw = str(person.get(f"SGPT{y_label}", "") or "").strip()
     
         alp_disp, alp_flag = interpret_liver(alp_raw, 120)
         sgot_disp, sgot_flag = interpret_liver(sgot_raw, 36)
