@@ -1016,10 +1016,10 @@ if "person" in st.session_state:
     for y in years:
         y_label = "" if y == 2568 else str(y % 100)
     
-        chol_raw = person.get(f"CHOL{y_label}", "").strip()
-        tgl_raw = person.get(f"TGL{y_label}", "").strip()
-        hdl_raw = person.get(f"HDL{y_label}", "").strip()
-        ldl_raw = person.get(f"LDL{y_label}", "").strip()
+        chol_raw = str(person.get(f"CHOL{y_label}", "") or "").strip()
+        tgl_raw = str(person.get(f"TGL{y_label}", "") or "").strip()
+        hdl_raw = str(person.get(f"HDL{y_label}", "") or "").strip()
+        ldl_raw = str(person.get(f"LDL{y_label}", "") or "").strip()
     
         chol_result = interpret_chol(chol_raw)
         tgl_result = interpret_tgl(tgl_raw)
