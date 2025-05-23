@@ -729,5 +729,5 @@ if "person" in st.session_state:
     
     # แสดงใน Streamlit หรือ Jupyter
     import streamlit as st
-    st.markdown("### 🧪 ผลตรวจการทำงานของตับ")
+    st.markdown("### 🧪 การทำงานของตับ")
     st.markdown(liver_df.to_html(escape=False), unsafe_allow_html=True)
