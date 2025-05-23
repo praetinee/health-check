@@ -226,21 +226,20 @@ if "person" in st.session_state:
     table_data = {
         "ปี พ.ศ.": [],
         "น้ำหนัก (กก.)": [],
-        "ส่วนสูง (ซม.)": [],  # ✅ เพิ่มตรงนี้
+        "ส่วนสูง (ซม.)": [],
         "รอบเอว (ซม.)": [],
         "ความดัน (mmHg)": [],
         "BMI (แปลผล)": []
     }
-
-
+    
     for y in sorted(years):
-        cols = columns_by_year[y]  # ✅ ต้องมี
+        cols = columns_by_year[y]
         weight = person.get(cols["weight"], "")
         height = person.get(cols["height"], "")
         waist = person.get(cols["waist"], "")
         sbp = person.get(cols["sbp"], "")
         dbp = person.get(cols["dbp"], "")
-
+    
         # ✅ คำนวณ BMI จากน้ำหนักและส่วนสูง
         try:
             bmi_val = float(weight) / ((float(height) / 100) ** 2)
@@ -249,7 +248,7 @@ if "person" in st.session_state:
         except:
             bmi_val = None
             bmi_str = "-"
-
+    
         # ✅ แปลผลความดัน
         try:
             if sbp or dbp:
@@ -260,7 +259,7 @@ if "person" in st.session_state:
                 bp_str = "-"
         except:
             bp_str = "-"
-
+    
         # ✅ เติมข้อมูลลงตาราง
         table_data["ปี พ.ศ."].append(y + 2500)
         table_data["น้ำหนัก (กก.)"].append(weight if weight else "-")
@@ -268,11 +267,24 @@ if "person" in st.session_state:
         table_data["รอบเอว (ซม.)"].append(waist if waist else "-")
         table_data["ความดัน (mmHg)"].append(bp_str)
         table_data["BMI (แปลผล)"].append(bmi_str)
-
-    # ✅ แสดงผลตาราง (รองรับ HTML <br> ด้วย unsafe_allow_html)
+    
+    # ✅ แปลงเป็น DataFrame แนวนอน (ปี พ.ศ. เป็น column header)
+    df_health = pd.DataFrame(table_data).set_index("ปี พ.ศ.").T
+    html_table = df_health.to_html(escape=False)
+    
+    # ✅ CSS จัดกลางปี พ.ศ. และข้อมูลทั้งหมด
+    table_style = """
+    <style>
+    th, td {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    </style>
+    """
+    
+    # ✅ แสดงผล
     st.markdown("### 📊 น้ำหนัก / รอบเอว / ความดัน")
-    html_table = pd.DataFrame(table_data).set_index("ปี พ.ศ.").T.to_html(escape=False)
-    st.markdown(html_table, unsafe_allow_html=True)
+    st.markdown(table_style + html_table, unsafe_allow_html=True)
 
     # ==========================
     # GRAPH: BMI History
