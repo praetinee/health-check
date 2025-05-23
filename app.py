@@ -678,17 +678,9 @@ if "person" in st.session_state:
     
     years = list(range(2561, 2569))
     
-    # ข้อมูลตัวอย่าง
-    example_values = {
-        2561: (100, 30, 35),
-        2562: (130, 40, 38),
-        2563: ("", "", ""),
-        2564: (110, 25, 20),
-        2565: (115, 36, 41),
-        2566: (0, 0, 0),
-        2567: (150, 50, 60),
-        2568: (90, 28, 32),
-    }
+    alp_raw = person.get(f"ALP{y_label}", "").strip()
+    sgot_raw = person.get(f"SGOT{y_label}", "").strip()
+    sgpt_raw = person.get(f"SGPT{y_label}", "").strip()
     
     # ฟังก์ชันตีความผล
     def interpret_liver(alp, sgot, sgpt):
