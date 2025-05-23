@@ -1161,9 +1161,10 @@ if "person" in st.session_state:
         fev1_col = f"FEV1เปอร์เซ็นต์{y_label}"
         ratio_col = f"FEV1/FVC%{y_label}"
     
-        fvc_raw = str(person.get(fvc_col, "")).strip()
-        fev1_raw = str(person.get(fev1_col, "")).strip()
-        ratio_raw = str(person.get(ratio_col, "")).strip()
+        fvc_raw = str(person.get(f"FVC เปอร์เซ็นต์{y_label}", "") or "").strip()
+        fev1_raw = str(person.get(f"FEV1เปอร์เซ็นต์{y_label}", "") or "").strip()
+        ratio_raw = str(person.get(f"FEV1/FVC%{y_label}", "") or "").strip()
+
     
         # แสดงค่าพร้อมแปลผล
         fvc_display = format_result(fvc_raw)
