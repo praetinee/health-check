@@ -1185,6 +1185,17 @@ if "person" in st.session_state:
     # ดึงคำแนะนำจากปีล่าสุด (2568)
     latest_year = 2568
     summary_latest = lung_data["ผลสรุป"][years.index(latest_year)]
+
+    # ฟังก์ชันให้คำแนะนำเกี่ยวกับสมรรถภาพปอด
+def lung_advice(summary_text):
+    if summary_text == "สมรรถภาพปอดปกติ":
+        return "ควรออกกำลังกายสม่ำเสมอเพื่อรักษาปอดให้แข็งแรง"
+    elif "ปอดจำกัดการขยายตัว" in summary_text or "หลอดลมอุดกั้น" in summary_text or "Mixed" in summary_text:
+        return "ควรเพิ่มสมรรถภาพปอดด้วยการออกกำลังกาย หลีกเลี่ยงควัน ฝุ่น และพบแพทย์หากมีอาการ"
+    elif summary_text == "สรุปไม่ได้":
+        return "ไม่สามารถสรุปผลได้ อาจเกิดจากข้อมูลไม่ครบ ควรตรวจซ้ำ"
+    return "-"
+    
     advice_lung = lung_advice(summary_latest)
     
     # แสดงคำแนะนำ
