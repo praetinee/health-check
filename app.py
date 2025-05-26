@@ -1116,6 +1116,9 @@ if "person" in st.session_state:
     st.markdown("### 🫁 สมรรถภาพปอด")
     
     years = list(range(2561, 2569))  # รองรับปี 2561 ถึง 2568
+
+    # ⬇️ ใส่ตรงนี้ เพื่อ debug
+    st.write("🟡 Headers in person:", person.keys())
     
     # ฟังก์ชันเลือกชื่อคอลัมน์ (ปี 2568 ไม่มีเลขกำกับ)
     def get_col(name: str, y: int) -> str:
@@ -1171,8 +1174,6 @@ if "person" in st.session_state:
     
     summary_latest = "-"
     for y in years:
-        y_label = "" if y == 2568 else str(y)[-2:]
-    
         fvc_col = get_col("FVC เปอร์เซ็นต์", y)
         fev1_col = get_col("FEV1เปอร์เซ็นต์", y)
         ratio_col = get_col("FEV1/FVC%", y)
