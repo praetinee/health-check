@@ -1181,3 +1181,22 @@ if "person" in st.session_state:
     # แสดงตาราง
     lung_df = pd.DataFrame.from_dict(lung_data, orient="index", columns=years)
     st.markdown(lung_df.to_html(escape=False), unsafe_allow_html=True)
+
+    # ดึงคำแนะนำจากปีล่าสุด (2568)
+    latest_year = 2568
+    summary_latest = lung_data["ผลสรุป"][years.index(latest_year)]
+    advice_lung = lung_advice(summary_latest)
+    
+    # แสดงคำแนะนำ
+    if advice_lung and advice_lung != "-":
+        st.markdown(f"""
+        <div style='
+            background-color: rgba(0, 150, 136, 0.15);
+            padding: 1rem;
+            border-radius: 6px;
+            color: white;
+        '>
+            <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำสมรรถภาพปอด ปี {latest_year}</div>
+            <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_lung}</div>
+        </div>
+        """, unsafe_allow_html=True)
