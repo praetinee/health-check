@@ -1117,9 +1117,11 @@ if "person" in st.session_state:
     
     years = list(range(2561, 2569))  # รองรับปี 2561 ถึง 2568
     
+    # ฟังก์ชันเลือกชื่อคอลัมน์ (ปี 2568 ไม่มีเลขกำกับ)
     def get_col(name: str, y: int) -> str:
         return name if y == 2568 else f"{name}{str(y)[-2:]}"
     
+    # ฟอร์แมตรูปแบบผลตรวจ
     def format_result(value, suffix="%"):
         try:
             val = float(value)
@@ -1129,6 +1131,7 @@ if "person" in st.session_state:
         except:
             return "-"
     
+    # ฟังก์ชันแปลผลสมรรถภาพปอด
     def interpret_lung(fvc, fev1, ratio):
         try:
             fvc = float(fvc)
@@ -1148,7 +1151,17 @@ if "person" in st.session_state:
         except:
             return "-"
     
-    # เตรียมข้อมูล
+    # ฟังก์ชันให้คำแนะนำ
+    def lung_advice(summary_text):
+        if summary_text == "สมรรถภาพปอดปกติ":
+            return "ควรออกกำลังกายสม่ำเสมอเพื่อรักษาปอดให้แข็งแรง"
+        elif "ปอดจำกัดการขยายตัว" in summary_text or "หลอดลมอุดกั้น" in summary_text or "Mixed" in summary_text:
+            return "ควรเพิ่มสมรรถภาพปอดด้วยการออกกำลังกาย หลีกเลี่ยงควัน ฝุ่น และพบแพทย์หากมีอาการ"
+        elif summary_text == "สรุปไม่ได้":
+            return "ไม่สามารถสรุปผลได้ อาจเกิดจากข้อมูลไม่ครบ ควรตรวจซ้ำ"
+        return "-"
+    
+    # เตรียมข้อมูลตาราง
     lung_data = {
         "FVC (%)": [],
         "FEV1 (%)": [],
@@ -1156,12 +1169,13 @@ if "person" in st.session_state:
         "ผลสรุป": []
     }
     
+    summary_latest = "-"
     for y in years:
         y_label = "" if y == 2568 else str(y)[-2:]
     
-        fvc_col = f"FVC เปอร์เซ็นต์{y_label}"
-        fev1_col = f"FEV1เปอร์เซ็นต์{y_label}"
-        ratio_col = f"FEV1/FVC%{y_label}"
+        fvc_col = get_col("FVC เปอร์เซ็นต์", y)
+        fev1_col = get_col("FEV1เปอร์เซ็นต์", y)
+        ratio_col = get_col("FEV1/FVC%", y)
     
         fvc_raw = str(person.get(fvc_col, "") or "").strip()
         fev1_raw = str(person.get(fev1_col, "") or "").strip()
@@ -1172,6 +1186,8 @@ if "person" in st.session_state:
         ratio_display = format_result(ratio_raw)
     
         summary = interpret_lung(fvc_raw, fev1_raw, ratio_raw)
+        if y == 2568:
+            summary_latest = summary
     
         lung_data["FVC (%)"].append(fvc_display)
         lung_data["FEV1 (%)"].append(fev1_display)
@@ -1181,24 +1197,10 @@ if "person" in st.session_state:
     # แสดงตาราง
     lung_df = pd.DataFrame.from_dict(lung_data, orient="index", columns=years)
     st.markdown(lung_df.to_html(escape=False), unsafe_allow_html=True)
-
-    # ดึงคำแนะนำจากปีล่าสุด (2568)
-    latest_year = 2568
-    summary_latest = lung_data["ผลสรุป"][years.index(latest_year)]
-
-    # ฟังก์ชันให้คำแนะนำเกี่ยวกับสมรรถภาพปอด
-def lung_advice(summary_text):
-    if summary_text == "สมรรถภาพปอดปกติ":
-        return "ควรออกกำลังกายสม่ำเสมอเพื่อรักษาปอดให้แข็งแรง"
-    elif "ปอดจำกัดการขยายตัว" in summary_text or "หลอดลมอุดกั้น" in summary_text or "Mixed" in summary_text:
-        return "ควรเพิ่มสมรรถภาพปอดด้วยการออกกำลังกาย หลีกเลี่ยงควัน ฝุ่น และพบแพทย์หากมีอาการ"
-    elif summary_text == "สรุปไม่ได้":
-        return "ไม่สามารถสรุปผลได้ อาจเกิดจากข้อมูลไม่ครบ ควรตรวจซ้ำ"
-    return "-"
-    
-    advice_lung = lung_advice(summary_latest)
     
     # แสดงคำแนะนำ
+    advice_lung = lung_advice(summary_latest)
+    
     if advice_lung and advice_lung != "-":
         st.markdown(f"""
         <div style='
@@ -1207,7 +1209,7 @@ def lung_advice(summary_text):
             border-radius: 6px;
             color: white;
         '>
-            <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำสมรรถภาพปอด ปี {latest_year}</div>
+            <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำสมรรถภาพปอด ปี 2568</div>
             <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_lung}</div>
         </div>
         """, unsafe_allow_html=True)
