@@ -1231,20 +1231,24 @@ if "person" in st.session_state:
     # ฟังก์ชันย่อข้อความคำแนะนำให้กระชับ
     def shorten_eye_advice(text: str) -> str:
         if "แนะนำพบแพทย์" in text or "ควรพบแพทย์" in text:
-            if "การมองเห็น" in text:
-                return "ควรพบแพทย์เพื่อตรวจการมองเห็น"
-            elif "สายตา" in text:
-                return "ควรพบแพทย์ด้านสายตา"
-            return "ควรพบแพทย์ตรวจเพิ่มเติม"
-        if "เหมาะสม" in text:
-            return "เหมาะสมกับงาน"
+            if "สายตา" in text:
+                return "พบแพทย์สายตาเพื่อประเมิน"
+            if "มองเห็น" in text:
+                return "พบแพทย์ตรวจการมองเห็น"
+            return "ควรพบแพทย์เพิ่มเติม"
+    
+        if "จักษุแพทย์" in text:
+            return "พบจักษุแพทย์ตรวจและแก้ไข"
+        if "เหมาะสมกับลักษณะงาน" in text or "เหมาะสมกับงาน" in text:
+            return "มองเห็นเหมาะสมกับงาน"
         if "แก้ไข" in text:
-            return "ควรแก้ไขปัญหาการมองเห็น"
-        if "ควรพบจักษุแพทย์" in text:
-            return "ควรพบจักษุแพทย์"
-        if "ตรวจและแก้ไข" in text:
-            return "ควรตรวจและแก้ไข"
-        return text.strip()[:30] + "..." if len(text.strip()) > 35 else text.strip()
+            return "ควรแก้ไขการมองเห็น"
+        if "ติดตามอาการ" in text:
+            return "พบแพทย์ติดตามอาการ"
+    
+        # fallback ตัดข้อความหากยาวเกิน
+        text = text.strip()
+        return text[:30] + "..." if len(text) > 35 else text
     
     # ดึงปีทั้งหมดจากคอลัมน์ในข้อมูลจริง
     eye_years = sorted({
