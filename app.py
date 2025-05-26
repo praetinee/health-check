@@ -1161,9 +1161,9 @@ if "person" in st.session_state:
         fev1_col = f"FEV1เปอร์เซ็นต์{y_label}"
         ratio_col = f"FEV1/FVC%{y_label}"
     
-        fvc_raw = str(person.get(f"FVC เปอร์เซ็นต์{y_label}", "") or "").strip()
-        fev1_raw = str(person.get(f"FEV1เปอร์เซ็นต์{y_label}", "") or "").strip()
-        ratio_raw = str(person.get(f"FEV1/FVC%{y_label}", "") or "").strip()
+        fvc_raw = str(person.get(fvc_col, "") or "").strip()
+        fev1_raw = str(person.get(fev1_col, "") or "").strip()
+        ratio_raw = str(person.get(ratio_col, "") or "").strip()
 
         # เพิ่มตรงนี้ 👇 เพื่อดูว่าค่าได้มาถูกหรือไม่
         st.write(f"{y}: FVC={fvc_col}='{fvc_raw}', FEV1={fev1_col}='{fev1_raw}', Ratio={ratio_col}='{ratio_raw}'")
