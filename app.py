@@ -1116,18 +1116,16 @@ if "person" in st.session_state:
     st.markdown("### 🫁 สมรรถภาพปอด")
     
     years = list(range(2561, 2569))  # รองรับปี 2561 ถึง 2568
-
-    # ฟังก์ชันเลือกชื่อคอลัมน์ (ปี 2568 ไม่มีเลขกำกับ)
+    
     def get_col(name: str, y: int) -> str:
-        return f"{name}{str(y)[-2:]}"  # ทุกปีต้องมีเลข 2 หลักท้าย แม้ปี 68
-
+        return f"{name}{str(y)[-2:]}"  # ทุกปีต้องมีเลขท้าย 2 หลัก (รวมปี 68)
+    
     def get_first_available(person, candidates):
         for col in candidates:
             if col in person:
                 return str(person.get(col, "")).strip()
-        return ""
+        return "-"
     
-    # ฟอร์แมตรูปแบบผลตรวจ
     def format_result(value, suffix="%"):
         try:
             val = float(value)
@@ -1137,7 +1135,6 @@ if "person" in st.session_state:
         except:
             return "-"
     
-    # ฟังก์ชันแปลผลสมรรถภาพปอด
     def interpret_lung(fvc, fev1, ratio):
         try:
             fvc = float(fvc)
@@ -1157,7 +1154,6 @@ if "person" in st.session_state:
         except:
             return "-"
     
-    # ฟังก์ชันให้คำแนะนำ
     def lung_advice(summary_text):
         if summary_text == "สมรรถภาพปอดปกติ":
             return "ควรออกกำลังกายสม่ำเสมอเพื่อรักษาปอดให้แข็งแรง"
@@ -1177,23 +1173,21 @@ if "person" in st.session_state:
     
     summary_latest = "-"
     for y in years:
-        fvc_col = get_col("FVC เปอร์เซ็นต์", y)
-        fev1_col = get_col("FEV1เปอร์เซ็นต์", y)
-        ratio_col = get_col("FEV1/FVC%", y)
+        y_suffix = str(y)[-2:]
     
         fvc_raw = get_first_available(person, [
-            get_col("FVC เปอร์เซ็นต์", y),
-            get_col("FVCเปอร์เซ็นต์", y)
+            f"FVC เปอร์เซ็นต์{y_suffix}",
+            f"FVCเปอร์เซ็นต์{y_suffix}"  # เผื่อไม่มีเว้นวรรค
         ])
-
+    
         fev1_raw = get_first_available(person, [
-            get_col("FEV1เปอร์เซ็นต์", y),
-            get_col("FEV1 เปอร์เซ็นต์", y)
+            f"FEV1เปอร์เซ็นต์{y_suffix}",
+            f"FEV1 เปอร์เซ็นต์{y_suffix}"
         ])
-        
+    
         ratio_raw = get_first_available(person, [
-            get_col("FEV1/FVC%", y),
-            get_col("FEV1/FVC% ", y)  # หากเคยมีเว้นท้าย
+            f"FEV1/FVC%{y_suffix}",
+            f"FEV1/FVC% {y_suffix}"  # เผื่อมีเว้นวรรคด้านหลัง
         ])
     
         fvc_display = format_result(fvc_raw)
@@ -1228,3 +1222,4 @@ if "person" in st.session_state:
             <div style='font-size: 16px; margin-top: 0.3rem;'>{advice_lung}</div>
         </div>
         """, unsafe_allow_html=True)
+
