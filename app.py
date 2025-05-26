@@ -1241,7 +1241,9 @@ if "person" in st.session_state:
     def get_first_available(person, col_names):
         for col in col_names:
             if col in person:
-                return str(person.get(col, "")).strip()
+                value = str(person.get(col, "")).strip()
+                if value:  # ค่าต้องไม่ว่าง
+                    return value
         return "-"
     
     # ฟังก์ชันย่อผลสรุป
