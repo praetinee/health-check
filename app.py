@@ -1114,8 +1114,8 @@ if "person" in st.session_state:
     # DISPLAY: ความจุปอด
     # ===============================
     st.markdown("### 🫁 สมรรถภาพปอด")
-
-    years = list(range(2561, 2569))  # ขยายปีในอนาคตได้เลย
+    
+    years = list(range(2561, 2569))  # รองรับปี 2561 ถึง 2568
     
     def get_col(name: str, y: int) -> str:
         return name if y == 2568 else f"{name}{str(y)[-2:]}"
@@ -1123,17 +1123,11 @@ if "person" in st.session_state:
     def format_result(value, suffix="%"):
         try:
             val = float(value)
-            return f"{val}<br><span style='font-size:13px;color:gray;'>ปกติ</span>" if val > 0 else "-"
+            if val == 0:
+                return "-"
+            return f"{val}<br><span style='font-size:13px;color:gray;'>ปกติ</span>"
         except:
             return "-"
-    
-    # เตรียมข้อมูล
-    lung_data = {
-        "FVC (%)": [],
-        "FEV1 (%)": [],
-        "FEV1/FVC (%)": [],
-        "ผลสรุป": []
-    }
     
     def interpret_lung(fvc, fev1, ratio):
         try:
@@ -1154,6 +1148,14 @@ if "person" in st.session_state:
         except:
             return "-"
     
+    # เตรียมข้อมูล
+    lung_data = {
+        "FVC (%)": [],
+        "FEV1 (%)": [],
+        "FEV1/FVC (%)": [],
+        "ผลสรุป": []
+    }
+    
     for y in years:
         y_label = "" if y == 2568 else str(y)[-2:]
     
@@ -1164,13 +1166,11 @@ if "person" in st.session_state:
         fvc_raw = str(person.get(fvc_col, "") or "").strip()
         fev1_raw = str(person.get(fev1_col, "") or "").strip()
         ratio_raw = str(person.get(ratio_col, "") or "").strip()
-  
-        # แสดงค่าพร้อมแปลผล
+    
         fvc_display = format_result(fvc_raw)
         fev1_display = format_result(fev1_raw)
         ratio_display = format_result(ratio_raw)
     
-        # สรุปสมรรถภาพปอด
         summary = interpret_lung(fvc_raw, fev1_raw, ratio_raw)
     
         lung_data["FVC (%)"].append(fvc_display)
@@ -1181,5 +1181,3 @@ if "person" in st.session_state:
     # แสดงตาราง
     lung_df = pd.DataFrame.from_dict(lung_data, orient="index", columns=years)
     st.markdown(lung_df.to_html(escape=False), unsafe_allow_html=True)
-
-
