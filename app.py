@@ -1120,6 +1120,12 @@ if "person" in st.session_state:
     # ฟังก์ชันเลือกชื่อคอลัมน์ (ปี 2568 ไม่มีเลขกำกับ)
     def get_col(name: str, y: int) -> str:
         return f"{name}{str(y)[-2:]}"  # ทุกปีต้องมีเลข 2 หลักท้าย แม้ปี 68
+
+    def get_first_available(person, candidates):
+        for col in candidates:
+            if col in person:
+                return str(person.get(col, "")).strip()
+        return ""
     
     # ฟอร์แมตรูปแบบผลตรวจ
     def format_result(value, suffix="%"):
@@ -1175,9 +1181,20 @@ if "person" in st.session_state:
         fev1_col = get_col("FEV1เปอร์เซ็นต์", y)
         ratio_col = get_col("FEV1/FVC%", y)
     
-        fvc_raw = str(person.get(fvc_col, "") or "").strip()
-        fev1_raw = str(person.get(fev1_col, "") or "").strip()
-        ratio_raw = str(person.get(ratio_col, "") or "").strip()
+        fvc_raw = get_first_available(person, [
+            get_col("FVC เปอร์เซ็นต์", y),
+            get_col("FVCเปอร์เซ็นต์", y)
+        ])
+
+        fev1_raw = get_first_available(person, [
+            get_col("FEV1เปอร์เซ็นต์", y),
+            get_col("FEV1 เปอร์เซ็นต์", y)
+        ])
+        
+        ratio_raw = get_first_available(person, [
+            get_col("FEV1/FVC%", y),
+            get_col("FEV1/FVC% ", y)  # หากเคยมีเว้นท้าย
+        ])
     
         fvc_display = format_result(fvc_raw)
         fev1_display = format_result(fev1_raw)
