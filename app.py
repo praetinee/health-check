@@ -1279,8 +1279,29 @@ if "person" in st.session_state:
         for field, prefixes in eye_metrics.items():
             col_names = [f"{prefix}{y_suffix}" for prefix in prefixes]
             value = get_first_available(person, col_names)
-            eye_data[field].append(value)
+            if field == "ผลสรุป":
+                eye_data[field].append(shorten_eye_advice(value))
+            else:
+                eye_data[field].append(value)
     
     # แสดงตาราง
     eye_df = pd.DataFrame.from_dict(eye_data, orient="index", columns=eye_years)
     st.markdown(eye_df.to_html(escape=False), unsafe_allow_html=True)
+
+    def shorten_eye_advice(text: str) -> str:
+        if "แนะนำพบแพทย์" in text or "ควรพบแพทย์" in text:
+            if "การมองเห็น" in text:
+                return "ควรพบแพทย์เพื่อตรวจการมองเห็น"
+            elif "สายตา" in text:
+                return "ควรพบแพทย์ด้านสายตา"
+            return "ควรพบแพทย์ตรวจเพิ่มเติม"
+        if "เหมาะสม" in text:
+            return "เหมาะสมกับงาน"
+        if "แก้ไข" in text:
+            return "ควรแก้ไขปัญหาการมองเห็น"
+        if "ควรพบจักษุแพทย์" in text:
+            return "ควรพบจักษุแพทย์"
+        if "ตรวจและแก้ไข" in text:
+            return "ควรตรวจและแก้ไข"
+        return text.strip()[:30] + "..." if len(text.strip()) > 35 else text.strip()
+
