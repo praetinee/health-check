@@ -1119,7 +1119,7 @@ if "person" in st.session_state:
 
     # ฟังก์ชันเลือกชื่อคอลัมน์ (ปี 2568 ไม่มีเลขกำกับ)
     def get_col(name: str, y: int) -> str:
-        return name if y == 2568 else f"{name}{str(y)[-2:]}"
+        return f"{name}{str(y)[-2:]}"  # ทุกปีต้องมีเลข 2 หลักท้าย แม้ปี 68
     
     # ฟอร์แมตรูปแบบผลตรวจ
     def format_result(value, suffix="%"):
