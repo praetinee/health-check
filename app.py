@@ -1248,9 +1248,9 @@ if "person" in st.session_state:
     def shorten_eye_summary(text: str) -> str:
         text = text.strip()
         if "เหมาะสม" in text and "มองเห็น" in text:
-            return "มองเห็นเหมาะสมกับงาน"
+            return "การมองเห็นเหมาะสมกับงาน"
         if "มองเห็นไม่เหมาะ" in text:
-            return "มองเห็นไม่เหมาะกับงาน"
+            return "การมองเห็นไม่เหมาะกับงาน"
         if "ไม่สามารถสรุป" in text:
             return "ไม่สามารถสรุปได้"
         return text[:35] + "..." if len(text) > 40 else text
@@ -1260,19 +1260,19 @@ if "person" in st.session_state:
         text = text.strip()
     
         if "บริหารสายตา" in text and "พักสายตา" in text:
-            return "บริหารสายตา-พักตา ตรวจปีละครั้ง"
+            return "บริหารสายตา-พักตาและตรวจปีละครั้ง"
         if "เครื่องจักร" in text or "ขับรถ" in text:
-            return "ระวังการทำงานใกล้เครื่องจักร"
+            return "การกะระยะต่ำกว่าเกณฑ์ ต้องระวังการทำงานใกล้เครื่องจักรและการขับรถ"
         if "ควรพบจักษุแพทย์" in text:
-            return "พบจักษุแพทย์"
+            return "ควรพบจักษุแพทย์เพื่อตรวจเพิ่มเติม"
         if "พักสายตา" in text and "ประเมิน" in text:
-            return "พักสายตา-ตรวจเพิ่ม"
+            return "พักสายตาและตรวจเพิ่ม"
         if "เหมาะสมกับลักษณะงาน" in text:
-            return "มองเห็นเหมาะกับงาน"
+            return "การมองเห็นเหมาะสมกับงาน"
         if "ควรพบแพทย์" in text:
-            return "พบแพทย์ตรวจสายตา"
+            return "พบแพทย์เพื่อตรวจเพิ่มเติม"
         if "ตรวจสมรรถภาพ" in text:
-            return "ตรวจสมรรถภาพสายตา"
+            return "ตรวจสมรรถภาพสายตาเพิ่มเติม"
     
         return text[:35] + "..." if len(text) > 40 else text
     
