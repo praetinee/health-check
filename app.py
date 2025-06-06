@@ -1324,3 +1324,51 @@ if "person" in st.session_state:
     # แสดงตาราง
     eye_df = pd.DataFrame.from_dict(eye_data, orient="index", columns=eye_years)
     st.markdown(eye_df.to_html(escape=False), unsafe_allow_html=True)
+
+    # ===============================
+    # DISPLAY: สมรรถภาพการได้ยิน
+    # ===============================
+    st.markdown("### 👂 สมรรถภาพการได้ยิน")
+    
+    # สร้างปีจากข้อมูลจริง
+    hearing_years = sorted({
+        2500 + int(col[-2:])
+        for col in person.keys()
+        if col[-2:].isdigit() and 2500 + int(col[-2:]) >= 2561
+    })
+    
+    # คำ prefix สำหรับการได้ยิน (ซ้าย/ขวา)
+    hearing_prefixes = {
+        "ซ้าย (L)": ["L500", "L1k", "L2k", "L3k", "L4k", "L6k", "L8k"],
+        "ขวา (R)": ["R500", "R1k", "R2k", "R3k", "R4k", "R6k", "R8k"],
+        "สรุป AVR/AVL": ["AVRต่ำ", "AVRสูง", "AVLต่ำ", "AVLสูง"],
+    }
+    
+    def get_col(name: str, year: int) -> str:
+        return f"{name}{str(year)[-2:]}"
+    
+    def get_first_available(person, col_names):
+        for col in col_names:
+            if col in person:
+                val = str(person.get(col, "")).strip()
+                if val:
+                    return val
+        return "-"
+    
+    # เตรียมตาราง
+    hearing_data = {k: [] for k in hearing_prefixes.keys()}
+    
+    for y in hearing_years:
+        suffix = str(y)[-2:]
+        for label, prefix_list in hearing_prefixes.items():
+            values = []
+            for p in prefix_list:
+                col_name = f"{p}{suffix}"
+                value = str(person.get(col_name, "")).strip()
+                if value:
+                    values.append(f"{p}:{value}")
+            hearing_data[label].append("<br>".join(values) if values else "-")
+    
+    # แสดงตาราง
+    hearing_df = pd.DataFrame.from_dict(hearing_data, orient="index", columns=hearing_years)
+    st.markdown(hearing_df.to_html(escape=False), unsafe_allow_html=True)
