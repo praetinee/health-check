@@ -1421,8 +1421,3 @@ if "person" in st.session_state:
     hearing_interp_df = pd.DataFrame(table_data)
     st.markdown("#### 📊 สรุปผลย้อนหลัง")
     st.markdown(hearing_interp_df.to_html(escape=False, index=False), unsafe_allow_html=True)
-
-    
-        hearing_interp_df = pd.DataFrame(table_data)
-        st.markdown("#### 📊 สรุปผลย้อนหลัง")
-        st.markdown(hearing_interp_df.to_html(escape=False, index=False), unsafe_allow_html=True)
