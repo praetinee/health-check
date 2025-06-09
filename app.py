@@ -1328,7 +1328,7 @@ if "person" in st.session_state:
     # ===============================
     # แปลผลสมรรถภาพการได้ยิน (ตามเกณฑ์มาตรฐาน)
     # ===============================
-    st.markdown("### 📌 สมรรถภาพการได้ยิน")
+    st.markdown("### 📌 การแปลผลสมรรถภาพการได้ยิน (ตามเกณฑ์มาตรฐาน)")
     
     years = list(range(2561, 2569))
     low_freqs = ['500', '1k', '2k']
@@ -1351,13 +1351,22 @@ if "person" in st.session_state:
         except:
             return False
     
-    def interpret_hearing(left, right, baseline=None):
+    def get_first_valid_year_data():
+        for y in years:
+            y_suffix = str(y)[-2:]
+            left = {f: person.get(f"L{f}{y_suffix}", "") for f in all_freqs}
+            right = {f: person.get(f"R{f}{y_suffix}", "") for f in all_freqs}
+            if not is_no_hearing_data(left) or not is_no_hearing_data(right):
+                return {"data": {"left": left, "right": right}, "year": y}
+        return None
+    
+    def interpret_hearing(left, right, baseline=None, compare_with_baseline=True):
         result = []
     
         for side, ear_data in [('หูซ้าย', left), ('หูขวา', right)]:
-            found = [f for f in all_freqs if hearing_loss_at_freq(ear_data.get(f))]
-            if found:
-                result.append(f"มีการได้ยินลดลงที่ {side} ความถี่ {', '.join(found)} Hz")
+            abnormal = [f for f in all_freqs if hearing_loss_at_freq(ear_data.get(f))]
+            if abnormal:
+                result.append(f"มีการได้ยินลดลงที่ {side} ความถี่ {', '.join(abnormal)} Hz")
             else:
                 result.append(f"สมรรถภาพการได้ยิน{side}ปกติ")
     
@@ -1375,7 +1384,7 @@ if "person" in st.session_state:
         if diff_high > 30:
             result.append("ระดับการได้ยินความถี่สูงของหูทั้งสองข้างต่างกันมากกว่า 30 dB")
     
-        if baseline:
+        if baseline and compare_with_baseline:
             for f in low_freqs:
                 try:
                     if float(left[f]) - float(baseline['left'][f]) > 15 or float(right[f]) - float(baseline['right'][f]) > 15:
@@ -1388,46 +1397,40 @@ if "person" in st.session_state:
                         result.append(f"ค่าเฉลี่ยความถี่สูง {f}Hz ต่างจาก baseline มากกว่า 20 dB")
                 except:
                     continue
-        else:
+        elif compare_with_baseline:
             result.append("ไม่มีข้อมูล baseline เพื่อเปรียบเทียบ")
     
         return result
     
-    # เตรียม baseline
-    def get_first_valid_year_data():
-        for y in years:
-            y_suffix = str(y)[-2:]
-            left = {f: person.get(f"L{f}{y_suffix}", "") for f in all_freqs}
-            right = {f: person.get(f"R{f}{y_suffix}", "") for f in all_freqs}
-            if not is_no_hearing_data(left) or not is_no_hearing_data(right):
-                return {"left": left, "right": right}
-        return None
-    
-    # baseline จาก LxxxB และ RxxxB
+    # ===== เตรียม baseline =====
     baseline_left = {f: person.get(f"L{f}B", "") for f in all_freqs}
     baseline_right = {f: person.get(f"R{f}B", "") for f in all_freqs}
-    baseline = {"left": baseline_left, "right": baseline_right}
+    baseline = None
+    baseline_source_year = None
     
-    # ถ้า baseline ไม่ครบ → ใช้ปีแรกที่มีการตรวจเป็น baseline แทน
-    if any(v in ["", None] for v in baseline_left.values()) or any(v in ["", None] for v in baseline_right.values()):
+    if all(baseline_left.values()) and all(baseline_right.values()):
+        baseline = {"left": baseline_left, "right": baseline_right}
+    else:
         fallback = get_first_valid_year_data()
         if fallback:
-            baseline = fallback
+            baseline = fallback["data"]
+            baseline_source_year = fallback["year"]
     
+    # ===== วนตรวจทุกปี =====
     result_by_year = {}
     
     for y in years:
         y_suffix = str(y)[-2:]
-    
         left = {f: person.get(f"L{f}{y_suffix}", "") for f in all_freqs}
         right = {f: person.get(f"R{f}{y_suffix}", "") for f in all_freqs}
+        compare = baseline is not None and y != baseline_source_year
     
         if is_no_hearing_data(left) and is_no_hearing_data(right):
             result_by_year[y] = ["ไม่มีข้อมูลการตรวจ"]
         else:
-            result_by_year[y] = interpret_hearing(left, right, baseline)
+            result_by_year[y] = interpret_hearing(left, right, baseline, compare_with_baseline=compare)
     
-    # แปลงเป็นตาราง
+    # ===== แสดงผลเป็นตาราง =====
     max_lines = max(len(v) for v in result_by_year.values())
     table_data = {}
     for year, results in result_by_year.items():
@@ -1437,3 +1440,7 @@ if "person" in st.session_state:
     hearing_interp_df = pd.DataFrame(table_data)
     st.markdown("#### 📊 สรุปผลย้อนหลัง")
     st.markdown(hearing_interp_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+    
+    # ===== แจ้ง baseline ที่ใช้ =====
+    if baseline_source_year:
+        st.info(f"📌 ใช้ผลการตรวจปี {baseline_source_year} เป็น baseline เนื่องจากไม่มี baseline ที่แท้จริง")
