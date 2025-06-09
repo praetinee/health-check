@@ -1394,9 +1394,25 @@ if "person" in st.session_state:
         return result
     
     # เตรียม baseline
+    def get_first_valid_year_data():
+        for y in years:
+            y_suffix = str(y)[-2:]
+            left = {f: person.get(f"L{f}{y_suffix}", "") for f in all_freqs}
+            right = {f: person.get(f"R{f}{y_suffix}", "") for f in all_freqs}
+            if not is_no_hearing_data(left) or not is_no_hearing_data(right):
+                return {"left": left, "right": right}
+        return None
+    
+    # baseline จาก LxxxB และ RxxxB
     baseline_left = {f: person.get(f"L{f}B", "") for f in all_freqs}
     baseline_right = {f: person.get(f"R{f}B", "") for f in all_freqs}
-    baseline = {"left": baseline_left, "right": baseline_right} if all(baseline_left.values()) and all(baseline_right.values()) else None
+    baseline = {"left": baseline_left, "right": baseline_right}
+    
+    # ถ้า baseline ไม่ครบ → ใช้ปีแรกที่มีการตรวจเป็น baseline แทน
+    if any(v in ["", None] for v in baseline_left.values()) or any(v in ["", None] for v in baseline_right.values()):
+        fallback = get_first_valid_year_data()
+        if fallback:
+            baseline = fallback
     
     result_by_year = {}
     
