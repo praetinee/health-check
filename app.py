@@ -1346,7 +1346,14 @@ if "person" in st.session_state:
                 return False
     
         def is_no_hearing_data(ear_data):
-            return all(str(ear_data.get(f, '')).strip() in ['', '0'] for f in ear_data)
+            # ต้องมีอย่างน้อย 1 ค่าที่สามารถแปลงเป็นตัวเลขได้
+            for v in ear_data.values():
+                try:
+                    if float(v) > 0 or float(v) == 0:  # ถ้าแปลงได้ ไม่ถือว่าไม่มีข้อมูล
+                        return False
+                except:
+                    continue
+            return True
     
         def interpret_hearing_level(left_ear, right_ear, baseline=None):
             results = []
