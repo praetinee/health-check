@@ -1328,46 +1328,99 @@ if "person" in st.session_state:
     # ===============================
     # DISPLAY: สมรรถภาพการได้ยิน (รองรับปีอนาคต)
     # ===============================
-    st.markdown("### 👂 สมรรถภาพการได้ยิน")
-    
-    # ดึงปีทั้งหมดจากข้อมูลจริง (จากชื่อคอลัมน์)
-    hearing_years = sorted({
-        2500 + int(col[-2:])
-        for col in person.keys()
-        if col[-2:].isdigit() and 2500 + int(col[-2:]) >= 2561 and 2500 + int(col[-2:]) <= 2600
-    })
-    
-    def get_col(name: str, year: int) -> str:
-        return f"{name}{str(year)[-2:]}"  # เพิ่มเลขท้าย 2 หลักตามปี
-    
-    def get_first_available(person, col_names):
-        for col in col_names:
-            if col in person:
-                return str(person.get(col, "")).strip()
-        return "-"
-    
-    # หัวข้อข้อมูลที่เราสนใจ
-    hearing_metrics = {
-        "เฉลี่ยคลื่นต่ำ": ["ผลการได้ยินเปรียบเทียบAVRFqต่ำ"],
-        "เฉลี่ยคลื่นสูง": ["ผลการได้ยินเปรียบเทียบAVRFqสูง"],
-        "ต่างจากเดิม": ["ผลการได้ยินเปรียบเทียบALLFq"],
-        "สรุปหูขวา": ["ผลตรวจการได้ยินหูขวา"],
-        "สรุปหูซ้าย": ["ผลตรวจการได้ยินหูซ้าย"],
-        "ระดับหูขวา": ["ระดับการได้ยินหูขวา"],
-        "ระดับหูซ้าย": ["ระดับการได้ยินหูซ้าย"],
+    st.markdown("### 📌 การแปลผลสมรรถภาพการได้ยิน (ตามเกณฑ์มาตรฐาน)")
+
+    def hearing_loss_at_freq(dB):
+        try:
+            return float(dB) > 25
+        except:
+            return False
+
+    def interpret_hearing_level(left_ear, right_ear, baseline=None):
+        result = []
+
+        low_freqs = ['500', '1k', '2k']
+        high_freqs = ['3k', '4k', '6k']
+        all_freqs = low_freqs + high_freqs
+
+        # หูซ้ายและขวา
+        for side, ear_data in [('หูซ้าย', left_ear), ('หูขวา', right_ear)]:
+            abnormalities = [f for f in all_freqs if hearing_loss_at_freq(ear_data.get(f))]
+            if abnormalities:
+                result.append(f"มีการได้ยินลดลงที่ {side} ความถี่ {', '.join(abnormalities)} Hz")
+            else:
+                result.append(f"สมรรถภาพการได้ยิน{side}ปกติ")
+
+        # ตรวจความต่างระหว่างหู
+        def safe_diff(a, b):
+            try:
+                return abs(float(a) - float(b))
+            except:
+                return 0
+
+        avg_L_low = [left_ear.get(f, 0) for f in low_freqs]
+        avg_R_low = [right_ear.get(f, 0) for f in low_freqs]
+        diff_low = safe_diff(sum(map(float, avg_L_low)) / 3, sum(map(float, avg_R_low)) / 3)
+
+        avg_L_high = [left_ear.get(f, 0) for f in high_freqs]
+        avg_R_high = [right_ear.get(f, 0) for f in high_freqs]
+        diff_high = safe_diff(sum(map(float, avg_L_high)) / 3, sum(map(float, avg_R_high)) / 3)
+
+        if diff_low > 15:
+            result.append("ระดับการได้ยินความถี่ต่ำของหูทั้งสองข้างต่างกันมากกว่า 15 dB")
+        if diff_high > 30:
+            result.append("ระดับการได้ยินความถี่สูงของหูทั้งสองข้างต่างกันมากกว่า 30 dB")
+
+        # ตรวจ shift เทียบ baseline ถ้ามี
+        if baseline:
+            for f in low_freqs:
+                try:
+                    if float(left_ear.get(f, 0)) - float(baseline['left'].get(f, 0)) > 15 \
+                    or float(right_ear.get(f, 0)) - float(baseline['right'].get(f, 0)) > 15:
+                        result.append(f"ค่าเฉลี่ยความถี่ต่ำ {f}Hz ต่างจาก baseline มากกว่า 15 dB")
+                except:
+                    continue
+            for f in high_freqs:
+                try:
+                    if float(left_ear.get(f, 0)) - float(baseline['left'].get(f, 0)) > 20 \
+                    or float(right_ear.get(f, 0)) - float(baseline['right'].get(f, 0)) > 20:
+                        result.append(f"ค่าเฉลี่ยความถี่สูง {f}Hz ต่างจาก baseline มากกว่า 20 dB")
+                except:
+                    continue
+        else:
+            result.append("ไม่มีข้อมูล baseline เพื่อใช้เปรียบเทียบ")
+
+        return result
+
+    # ตรวจปีล่าสุดที่มีข้อมูล
+    latest_year = hearing_years[-1]
+    y_suffix = str(latest_year)[-2:]
+
+    left_ear = {
+        '500': person.get(f'JL{y_suffix}', '0'),
+        '1k': person.get(f'JM{y_suffix}', '0'),
+        '2k': person.get(f'JN{y_suffix}', '0'),
+        '3k': person.get(f'JO{y_suffix}', '0'),
+        '4k': person.get(f'JP{y_suffix}', '0'),
+        '6k': person.get(f'JQ{y_suffix}', '0'),
     }
-    
-    # เตรียมตารางข้อมูล
-    hearing_data = {k: [] for k in hearing_metrics.keys()}
-    
-    # Loop ตามปีที่ตรวจเจอในข้อมูล
-    for y in hearing_years:
-        y_suffix = str(y)[-2:]
-        for field, prefixes in hearing_metrics.items():
-            col_names = [f"{prefix}{y_suffix}" for prefix in prefixes]
-            value = get_first_available(person, col_names)
-            hearing_data[field].append(value)
-    
-    # แสดงตาราง
-    hearing_df = pd.DataFrame.from_dict(hearing_data, orient="index", columns=hearing_years)
-    st.markdown(hearing_df.to_html(escape=False), unsafe_allow_html=True)
+
+    right_ear = {
+        '500': person.get(f'JS{y_suffix}', '0'),
+        '1k': person.get(f'JT{y_suffix}', '0'),
+        '2k': person.get(f'JU{y_suffix}', '0'),
+        '3k': person.get(f'JV{y_suffix}', '0'),
+        '4k': person.get(f'JW{y_suffix}', '0'),
+        '6k': person.get(f'JX{y_suffix}', '0'),
+    }
+
+    # หา baseline ถ้ามี
+    baseline = None
+    baseline_left = {f: person.get(f"L{f}B", None) for f in ['500', '1k', '2k', '3k', '4k', '6k']}
+    baseline_right = {f: person.get(f"R{f}B", None) for f in ['500', '1k', '2k', '3k', '4k', '6k']}
+    if all(baseline_left.values()) and all(baseline_right.values()):
+        baseline = {"left": baseline_left, "right": baseline_right}
+
+    hearing_notes = interpret_hearing_level(left_ear, right_ear, baseline)
+    for note in hearing_notes:
+        st.markdown(f"- {note}")
