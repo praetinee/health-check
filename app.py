@@ -1339,21 +1339,21 @@ if "person" in st.session_state:
     if not hearing_years:
         st.warning("ไม่พบข้อมูลปีสำหรับการได้ยิน")
     else:
+        def is_no_hearing_data(ear_data):
+            for val in ear_data.values():
+                try:
+                    num = float(str(val).strip())
+                    if num > 0:
+                        return False
+                except:
+                    continue
+            return True
+    
         def hearing_loss_at_freq(dB):
             try:
                 return float(dB) > 25
             except:
                 return False
-    
-        def is_no_hearing_data(ear_data):
-            # ต้องมีอย่างน้อย 1 ค่าที่สามารถแปลงเป็นตัวเลขได้
-            for v in ear_data.values():
-                try:
-                    if float(v) > 0 or float(v) == 0:  # ถ้าแปลงได้ ไม่ถือว่าไม่มีข้อมูล
-                        return False
-                except:
-                    continue
-            return True
     
         def interpret_hearing_level(left_ear, right_ear, baseline=None):
             results = []
@@ -1362,7 +1362,6 @@ if "person" in st.session_state:
             high_freqs = ['3k', '4k', '6k']
             all_freqs = low_freqs + high_freqs
     
-            # หูซ้าย-ขวา
             for side, ear_data in [('หูซ้าย', left_ear), ('หูขวา', right_ear)]:
                 abnormalities = [f for f in all_freqs if hearing_loss_at_freq(ear_data.get(f))]
                 if abnormalities:
@@ -1370,7 +1369,6 @@ if "person" in st.session_state:
                 else:
                     results.append(f"สมรรถภาพการได้ยิน{side}ปกติ")
     
-            # ต่างกันระหว่างหู
             def avg(ear, freqs):
                 try:
                     return sum(float(ear.get(f, 0)) for f in freqs) / len(freqs)
@@ -1385,7 +1383,6 @@ if "person" in st.session_state:
             if diff_high > 30:
                 results.append("ระดับการได้ยินความถี่สูงของหูทั้งสองข้างต่างกันมากกว่า 30 dB")
     
-            # เทียบ baseline
             if baseline:
                 for f in low_freqs:
                     try:
@@ -1404,14 +1401,10 @@ if "person" in st.session_state:
     
             return results
     
-        # baseline ถ้ามี
-        baseline = None
         baseline_left = {f: person.get(f"L{f}B", None) for f in ['500', '1k', '2k', '3k', '4k', '6k']}
         baseline_right = {f: person.get(f"R{f}B", None) for f in ['500', '1k', '2k', '3k', '4k', '6k']}
-        if all(baseline_left.values()) and all(baseline_right.values()):
-            baseline = {"left": baseline_left, "right": baseline_right}
+        baseline = {"left": baseline_left, "right": baseline_right} if all(baseline_left.values()) and all(baseline_right.values()) else None
     
-        # เตรียมผลลัพธ์แบบตาราง
         result_by_year = {}
     
         for y in hearing_years:
@@ -1440,15 +1433,12 @@ if "person" in st.session_state:
             else:
                 result_by_year[y] = interpret_hearing_level(left_ear, right_ear, baseline)
     
-        # สร้าง DataFrame แสดงผลแบบตาราง
         max_lines = max(len(v) for v in result_by_year.values())
         table_data = {}
-    
         for year, results in result_by_year.items():
             padded = results + [""] * (max_lines - len(results))
             table_data[year] = padded
     
         hearing_interp_df = pd.DataFrame(table_data)
-    
         st.markdown("#### 📊 สรุปผลย้อนหลัง")
         st.markdown(hearing_interp_df.to_html(escape=False, index=False), unsafe_allow_html=True)
