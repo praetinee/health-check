@@ -1330,114 +1330,98 @@ if "person" in st.session_state:
     # ===============================
     st.markdown("### 📌 การแปลผลสมรรถภาพการได้ยิน (ตามเกณฑ์มาตรฐาน)")
     
-    hearing_years = sorted({
-        2500 + int(col[-2:])
-        for col in person.keys()
-        if col[-2:].isdigit() and 2500 + int(col[-2:]) >= 2561 and 2500 + int(col[-2:]) <= 2600
-    })
+    years = list(range(2561, 2569))
+    low_freqs = ['500', '1k', '2k']
+    high_freqs = ['3k', '4k', '6k']
+    all_freqs = low_freqs + high_freqs
     
-    if not hearing_years:
-        st.warning("ไม่พบข้อมูลปีสำหรับการได้ยิน")
-    else:
-        def is_no_hearing_data(ear_data):
-            for val in ear_data.values():
+    def is_no_hearing_data(ear_data):
+        for val in ear_data.values():
+            try:
+                num = float(str(val).strip())
+                if num > 0:
+                    return False
+            except:
+                continue
+        return True
+    
+    def hearing_loss_at_freq(dB):
+        try:
+            return float(dB) > 25
+        except:
+            return False
+    
+    def interpret_hearing(left, right, baseline=None):
+        result = []
+    
+        for side, ear_data in [('หูซ้าย', left), ('หูขวา', right)]:
+            found = [f for f in all_freqs if hearing_loss_at_freq(ear_data.get(f))]
+            if found:
+                result.append(f"มีการได้ยินลดลงที่ {side} ความถี่ {', '.join(found)} Hz")
+            else:
+                result.append(f"สมรรถภาพการได้ยิน{side}ปกติ")
+    
+        def avg(ear, freqs):
+            try:
+                return sum(float(ear.get(f, 0)) for f in freqs) / len(freqs)
+            except:
+                return 0
+    
+        diff_low = abs(avg(left, low_freqs) - avg(right, low_freqs))
+        diff_high = abs(avg(left, high_freqs) - avg(right, high_freqs))
+    
+        if diff_low > 15:
+            result.append("ระดับการได้ยินความถี่ต่ำของหูทั้งสองข้างต่างกันมากกว่า 15 dB")
+        if diff_high > 30:
+            result.append("ระดับการได้ยินความถี่สูงของหูทั้งสองข้างต่างกันมากกว่า 30 dB")
+    
+        if baseline:
+            for f in low_freqs:
                 try:
-                    num = float(str(val).strip())
-                    if num > 0:
-                        return False
+                    if float(left[f]) - float(baseline['left'][f]) > 15 or float(right[f]) - float(baseline['right'][f]) > 15:
+                        result.append(f"ค่าเฉลี่ยความถี่ต่ำ {f}Hz ต่างจาก baseline มากกว่า 15 dB")
                 except:
                     continue
-            return True
-    
-        def hearing_loss_at_freq(dB):
-            try:
-                return float(dB) > 25
-            except:
-                return False
-    
-        def interpret_hearing_level(left_ear, right_ear, baseline=None):
-            results = []
-    
-            low_freqs = ['500', '1k', '2k']
-            high_freqs = ['3k', '4k', '6k']
-            all_freqs = low_freqs + high_freqs
-    
-            for side, ear_data in [('หูซ้าย', left_ear), ('หูขวา', right_ear)]:
-                abnormalities = [f for f in all_freqs if hearing_loss_at_freq(ear_data.get(f))]
-                if abnormalities:
-                    results.append(f"มีการได้ยินลดลงที่ {side} ความถี่ {', '.join(abnormalities)} Hz")
-                else:
-                    results.append(f"สมรรถภาพการได้ยิน{side}ปกติ")
-    
-            def avg(ear, freqs):
+            for f in high_freqs:
                 try:
-                    return sum(float(ear.get(f, 0)) for f in freqs) / len(freqs)
+                    if float(left[f]) - float(baseline['left'][f]) > 20 or float(right[f]) - float(baseline['right'][f]) > 20:
+                        result.append(f"ค่าเฉลี่ยความถี่สูง {f}Hz ต่างจาก baseline มากกว่า 20 dB")
                 except:
-                    return 0
+                    continue
+        else:
+            result.append("ไม่มีข้อมูล baseline เพื่อเปรียบเทียบ")
     
-            diff_low = abs(avg(left_ear, low_freqs) - avg(right_ear, low_freqs))
-            diff_high = abs(avg(left_ear, high_freqs) - avg(right_ear, high_freqs))
+        return result
     
-            if diff_low > 15:
-                results.append("ระดับการได้ยินความถี่ต่ำของหูทั้งสองข้างต่างกันมากกว่า 15 dB")
-            if diff_high > 30:
-                results.append("ระดับการได้ยินความถี่สูงของหูทั้งสองข้างต่างกันมากกว่า 30 dB")
+    # เตรียม baseline
+    baseline_left = {f: person.get(f"L{f}B", "") for f in all_freqs}
+    baseline_right = {f: person.get(f"R{f}B", "") for f in all_freqs}
+    baseline = {"left": baseline_left, "right": baseline_right} if all(baseline_left.values()) and all(baseline_right.values()) else None
     
-            if baseline:
-                for f in low_freqs:
-                    try:
-                        if float(left_ear[f]) - float(baseline['left'][f]) > 15 or float(right_ear[f]) - float(baseline['right'][f]) > 15:
-                            results.append(f"ค่าเฉลี่ยความถี่ต่ำ {f}Hz ต่างจาก baseline มากกว่า 15 dB")
-                    except:
-                        continue
-                for f in high_freqs:
-                    try:
-                        if float(left_ear[f]) - float(baseline['left'][f]) > 20 or float(right_ear[f]) - float(baseline['right'][f]) > 20:
-                            results.append(f"ค่าเฉลี่ยความถี่สูง {f}Hz ต่างจาก baseline มากกว่า 20 dB")
-                    except:
-                        continue
-            else:
-                results.append("ไม่มีข้อมูล baseline เพื่อใช้เปรียบเทียบ")
+    result_by_year = {}
     
-            return results
+    for y in years:
+        y_suffix = str(y)[-2:]
     
-        baseline_left = {f: person.get(f"L{f}B", None) for f in ['500', '1k', '2k', '3k', '4k', '6k']}
-        baseline_right = {f: person.get(f"R{f}B", None) for f in ['500', '1k', '2k', '3k', '4k', '6k']}
-        baseline = {"left": baseline_left, "right": baseline_right} if all(baseline_left.values()) and all(baseline_right.values()) else None
+        left = {f: person.get(f"L{f}{y_suffix}", "") for f in all_freqs}
+        right = {f: person.get(f"R{f}{y_suffix}", "") for f in all_freqs}
     
-        result_by_year = {}
+        if is_no_hearing_data(left) and is_no_hearing_data(right):
+            result_by_year[y] = ["ไม่มีข้อมูลการตรวจ"]
+        else:
+            result_by_year[y] = interpret_hearing(left, right, baseline)
     
-        for y in hearing_years:
-            y_suffix = str(y)[-2:]
+    # แปลงเป็นตาราง
+    max_lines = max(len(v) for v in result_by_year.values())
+    table_data = {}
+    for year, results in result_by_year.items():
+        padded = results + [""] * (max_lines - len(results))
+        table_data[year] = padded
     
-            left_ear = {
-                '500': person.get(f'JL{y_suffix}', ''),
-                '1k': person.get(f'JM{y_suffix}', ''),
-                '2k': person.get(f'JN{y_suffix}', ''),
-                '3k': person.get(f'JO{y_suffix}', ''),
-                '4k': person.get(f'JP{y_suffix}', ''),
-                '6k': person.get(f'JQ{y_suffix}', ''),
-            }
-    
-            right_ear = {
-                '500': person.get(f'JS{y_suffix}', ''),
-                '1k': person.get(f'JT{y_suffix}', ''),
-                '2k': person.get(f'JU{y_suffix}', ''),
-                '3k': person.get(f'JV{y_suffix}', ''),
-                '4k': person.get(f'JW{y_suffix}', ''),
-                '6k': person.get(f'JX{y_suffix}', ''),
-            }
-    
-            if is_no_hearing_data(left_ear) and is_no_hearing_data(right_ear):
-                result_by_year[y] = ["ไม่มีข้อมูลการตรวจ"]
-            else:
-                result_by_year[y] = interpret_hearing_level(left_ear, right_ear, baseline)
-    
-        max_lines = max(len(v) for v in result_by_year.values())
-        table_data = {}
-        for year, results in result_by_year.items():
-            padded = results + [""] * (max_lines - len(results))
-            table_data[year] = padded
+    hearing_interp_df = pd.DataFrame(table_data)
+    st.markdown("#### 📊 สรุปผลย้อนหลัง")
+    st.markdown(hearing_interp_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+
     
         hearing_interp_df = pd.DataFrame(table_data)
         st.markdown("#### 📊 สรุปผลย้อนหลัง")
