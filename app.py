@@ -282,50 +282,7 @@ if "person" in st.session_state:
 
     st.markdown(render_health_report(person, selected_cols), unsafe_allow_html=True)
 
-    # ==================== Urinalysis & Other Tests ====================
-    urinalysis_results = {
-        "สี (Colour)": ("N/A", "Yellow, Pale Yellow"),
-        "น้ำตาล (sugar)": ("N/A", "Negative"),
-        "เม็ดเลือดขาว (Wbc/HPF)": ("N/A", "0–5 cell/HPF"),
-        "เม็ดเลือดแดง (Rbc/HPF)": ("N/A", "0–2 cell/HPF"),
-        "กรด-ด่าง (pH)": ("N/A", "5.0–8.0"),
-        "โปรตีน (albumin)": ("N/A", "Negative, trace"),
-        "ความถ่วงจำเพาะ (Sp.gr)": ("N/A", "1.003–1.030"),
-        "เซลล์เยื่อบุผิว (Squam.epit.)": ("N/A", "0–10 cell/HPF"),
-    }
-    
-    urinalysis_rows = []
-    for name, (val, normal) in urinalysis_results.items():
-        val_str, is_abn = flag_urine_value(val, normal)
-        urinalysis_rows.append([(name, is_abn), (val_str, is_abn), (normal, is_abn)])
-    
-    st.markdown("## 🔬 ผลการตรวจทางห้องปฏิบัติการเพิ่มเติม")
-    
-    left_col, right_col = st.columns(2)
-    
-    with left_col:
-        st.markdown(render_section_header("ผลการตรวจปัสสาวะ (Urinalysis)"), unsafe_allow_html=True)
-        st.markdown(styled_result_table(["ชื่อการตรวจ", "ผลตรวจ", "ค่าปกติ"], urinalysis_rows), unsafe_allow_html=True)
-    
-        st.markdown(render_section_header("ผลการตรวจอุจจาระ (Stool Exam)"), unsafe_allow_html=True)
-        st.write("ผลตรวจ: N/A")
-    
-    with right_col:
-        st.markdown(render_section_header("ผลการตรวจเอกซเรย์ (Chest X-ray)"), unsafe_allow_html=True)
-        st.write("ผลตรวจ: N/A")
-    
-        st.markdown(render_section_header("ผลการตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)"), unsafe_allow_html=True)
-        st.write("ผลตรวจ: N/A")
-    
-        st.markdown(render_section_header("ผลการตรวจไวรัสตับอักเสบบี (Viral hepatitis B)"), unsafe_allow_html=True)
-        st.write("ผลตรวจ: N/A")
-    
-        st.markdown(render_section_header("ผลการตรวจคลื่นไฟฟ้าหัวใจ (EKG)"), unsafe_allow_html=True)
-        st.write("ผลตรวจ: N/A")
-
-
     # ================== CBC / BLOOD TEST DISPLAY ==================
-
     
     cbc_cols = cbc_columns_by_year[selected_year]
     blood_cols = blood_columns_by_year[selected_year]
@@ -418,46 +375,6 @@ if "person" in st.session_state:
             html += f"<tr>{row_html}</tr>"
         html += "</tbody></table>"
         return html
-
-    def flag_urine_value(val, normal_range=None):
-        val_str = str(val).strip()
-        if val_str.upper() in ["N/A", "-", ""]:
-            return "-", False
-        val_clean = val_str.lower()
-    
-        if normal_range == "Yellow, Pale Yellow":
-            return val_str, val_clean not in ["yellow", "pale yellow"]
-        if normal_range == "Negative":
-            return val_str, val_clean != "negative"
-        if normal_range == "Negative, trace":
-            return val_str, val_clean not in ["negative", "trace"]
-        if normal_range == "5.0 - 8.0":
-            try:
-                num = float(val_str)
-                return val_str, not (5.0 <= num <= 8.0)
-            except:
-                return val_str, True
-        if normal_range == "1.003 - 1.030":
-            try:
-                num = float(val_str)
-                return val_str, not (1.003 <= num <= 1.030)
-            except:
-                return val_str, True
-        if "cell/HPF" in normal_range:
-            try:
-                # ดึง upper จากช่วงค่าปกติ เช่น "0 - 5 cell/HPF"
-                upper = int(normal_range.split("-")[1].split()[0])
-                # ถ้า value เป็นช่วง เช่น "2-3"
-                if "-" in val_str:
-                    left, right = map(int, val_str.split("-"))
-                    return val_str, right > upper
-                else:
-                    num = int(val_str)
-                    return val_str, num > upper
-            except:
-                return val_str, True
-    
-        return val_str, False
 
     def render_section_header(title):
         return f"""
