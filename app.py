@@ -212,6 +212,36 @@ for year in range(61, 69):
         })
 
 # ==================== DISPLAY ====================
+    def render_additional_screening():
+        screening_items = [
+            "ผลการตรวจเอกซเรย์ (Chest X-ray)",
+            "ผลการตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)",
+            "ผลการตรวจไวรัสตับอักเสบบี (Viral hepatitis B)",
+            "ผลการตรวจคลื่นไฟฟ้าหัวใจ (EKG)",
+        ]
+    
+        blocks = []
+        for title in screening_items:
+            block = f"""
+            <div style='
+                background-color: #A5D6A7;
+                padding: 20px;
+                margin: 10px 0;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: bold;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            '>
+                <span>{title}</span>
+                <span style='font-weight: normal;'>N/A</span>
+            </div>
+            """
+            blocks.append(block)
+    
+        return "".join(blocks)
+
 if "person" in st.session_state:
     person = st.session_state["person"]
 
@@ -281,6 +311,12 @@ if "person" in st.session_state:
         """
 
     st.markdown(render_health_report(person, selected_cols), unsafe_allow_html=True)
+    # ✅ เพิ่มคอลัมน์ขวาแสดงผลการตรวจเพิ่มเติม
+    left, spacer, right = st.columns([5, 0.5, 2])
+    with right:
+        st.markdown("<h4 style='margin-top:2rem;'>🩻 ผลการตรวจเพิ่มเติม</h4>", unsafe_allow_html=True)
+        st.markdown(render_additional_screening(), unsafe_allow_html=True)
+
 
     # ================== CBC / BLOOD TEST DISPLAY ==================
 
