@@ -310,13 +310,15 @@ if "person" in st.session_state:
         </div>
         """
 
-    st.markdown(render_health_report(person, selected_cols), unsafe_allow_html=True)
-    # ✅ เพิ่มคอลัมน์ขวาแสดงผลการตรวจเพิ่มเติม
-    left, spacer, right = st.columns([5, 0.5, 2])
-    with right:
+    # ✅ Layout 2 คอลัมน์ (ซ้าย: รายงานสุขภาพ, ขวา: ผลตรวจเพิ่มเติม)
+    left_col, right_col = st.columns([2.8, 1.2])
+    
+    with left_col:
+        st.markdown(render_health_report(person, selected_cols), unsafe_allow_html=True)
+    
+    with right_col:
         st.markdown("<h4 style='margin-top:2rem;'>🩻 ผลการตรวจเพิ่มเติม</h4>", unsafe_allow_html=True)
         st.markdown(render_additional_screening(), unsafe_allow_html=True)
-
 
     # ================== CBC / BLOOD TEST DISPLAY ==================
 
@@ -1109,8 +1111,19 @@ if "person" in st.session_state:
     
         return "".join(blocks)
     
-    # เพิ่มการแสดงผลด้านขวา
-    _, _, right_col = st.columns([5, 0.5, 2])
-    with right_col:
-        st.markdown("<h4 style='margin-top:2rem;'>🩻 ผลการตรวจเพิ่มเติม</h4>", unsafe_allow_html=True)
-        st.markdown(render_additional_screening(), unsafe_allow_html=True)
+    ...
+    
+    if "person" in st.session_state:
+        person = st.session_state["person"]
+    
+        selected_year = st.selectbox(...)  # <-- ของเดิม
+    
+        # ✅ คอลัมน์ซ้าย-ขวา: รายงานสุขภาพ & ผลตรวจเพิ่มเติม
+        left_col, right_col = st.columns([2.8, 1.2])
+    
+        with left_col:
+            st.markdown(render_health_report(person, selected_cols), unsafe_allow_html=True)
+    
+        with right_col:
+            st.markdown("<h4 style='margin-top:2rem;'>🩻 ผลการตรวจเพิ่มเติม</h4>", unsafe_allow_html=True)
+            st.markdown(render_additional_screening(), unsafe_allow_html=True)
