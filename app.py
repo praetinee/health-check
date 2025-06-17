@@ -1042,3 +1042,39 @@ if "person" in st.session_state:
         <b>ผลเพาะเชื้ออุจจาระ:</b> {cs_text}
     </p>
     """, unsafe_allow_html=True)
+
+    def render_additional_screening():
+        screening_items = [
+            "ผลการตรวจเอกซเรย์ (Chest X-ray)",
+            "ผลการตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)",
+            "ผลการตรวจไวรัสตับอักเสบบี (Viral hepatitis B)",
+            "ผลการตรวจคลื่นไฟฟ้าหัวใจ (EKG)",
+        ]
+    
+        blocks = []
+        for title in screening_items:
+            block = f"""
+            <div style='
+                background-color: #A5D6A7;
+                padding: 20px;
+                margin: 10px 0;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: bold;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            '>
+                <span>{title}</span>
+                <span style='font-weight: normal;'>N/A</span>
+            </div>
+            """
+            blocks.append(block)
+    
+        return "".join(blocks)
+    
+    # เพิ่มการแสดงผลด้านขวา
+    _, _, right_col = st.columns([5, 0.5, 2])
+    with right_col:
+        st.markdown("<h4 style='margin-top:2rem;'>🩻 ผลการตรวจเพิ่มเติม</h4>", unsafe_allow_html=True)
+        st.markdown(render_additional_screening(), unsafe_allow_html=True)
