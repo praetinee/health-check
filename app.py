@@ -212,36 +212,6 @@ for year in range(61, 69):
         })
 
 # ==================== DISPLAY ====================
-    def render_additional_screening():
-        screening_items = [
-            "ผลการตรวจเอกซเรย์ (Chest X-ray)",
-            "ผลการตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)",
-            "ผลการตรวจไวรัสตับอักเสบบี (Viral hepatitis B)",
-            "ผลการตรวจคลื่นไฟฟ้าหัวใจ (EKG)",
-        ]
-    
-        blocks = []
-        for title in screening_items:
-            block = f"""
-            <div style='
-                background-color: #A5D6A7;
-                padding: 20px;
-                margin: 10px 0;
-                border-radius: 8px;
-                font-size: 16px;
-                font-weight: bold;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            '>
-                <span>{title}</span>
-                <span style='font-weight: normal;'>N/A</span>
-            </div>
-            """
-            blocks.append(block)
-    
-        return "".join(blocks)
-
 if "person" in st.session_state:
     person = st.session_state["person"]
 
@@ -309,6 +279,8 @@ if "person" in st.session_state:
             </div>
         </div>
         """
+
+    st.markdown(render_health_report(person, selected_cols), unsafe_allow_html=True)
 
     # ================== CBC / BLOOD TEST DISPLAY ==================
 
@@ -873,67 +845,64 @@ if "person" in st.session_state:
     
     st.markdown(centered_box, unsafe_allow_html=True)
 
-    # ✅ แสดงผล Urinalysis + Stool + X-ray & Hepatitis แบบสองคอลัมน์
-    st.markdown("## 📋 รายงานผลตรวจเพิ่มเติม")
-    
-    left_col, right_col = st.columns([2, 2])
-    
-    # ---- ซ้าย: ปัสสาวะ + อุจจาระ ----
-    with left_col:
-        st.subheader("ผลการตรวจปัสสาวะ (Urinalysis)")
-    
-        urinalysis_data = {
-            "สี (Colour)": "N/A",
-            "น้ำตาล (sugar)": "N/A",
-            "เม็ดเลือดขาว (Wbc/HPF)": "N/A",
-            "เม็ดเลือดแดง (Rbc/HPF)": "N/A",
-            "กรด-ด่าง (pH)": "N/A",
-            "โปรตีน (albumin)": "N/A",
-            "ความถ่วงจำเพาะ (Sp.gr)": "N/A",
-            "เซลล์เยื่อบุผิว (Squam.epit.)": "N/A"
-        }
-    
-        normal_ranges = {
-            "สี (Colour)": "Yellow, Pale Yellow",
-            "น้ำตาล (sugar)": "Negative",
-            "เม็ดเลือดขาว (Wbc/HPF)": "0–5 cell/HPF",
-            "เม็ดเลือดแดง (Rbc/HPF)": "0–2 cell/HPF",
-            "กรด-ด่าง (pH)": "5.0–8.0",
-            "โปรตีน (albumin)": "Negative, trace",
-            "ความถ่วงจำเพาะ (Sp.gr)": "1.003–1.030",
-            "เซลล์เยื่อบุผิว (Squam.epit.)": "0–10 cell/HPF"
-        }
-    
-        for item, result in urinalysis_data.items():
-            st.write(f"**{item}**: {result} (ปกติ: {normal_ranges[item]})")
-    
-        st.write("**สรุปผล:** -")
-        st.write("**คำแนะนำ:**")
-    
-        st.markdown("---")
-        st.subheader("ผลการตรวจอุจจาระ (Stool Exam)")
-        st.write("ผลตรวจ: N/A")
-    
-    # ---- ขวา: เอกซเรย์ + ไวรัส + EKG ----
-    with right_col:
-        st.subheader("ผลการตรวจเอกซเรย์ (Chest X-ray)")
-        st.write("ผลตรวจ: N/A")
-    
-        st.markdown("---")
-        st.subheader("ผลการตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)")
-        st.write("ผลตรวจ: N/A")
-    
-        st.markdown("---")
-        st.subheader("ผลการตรวจไวรัสตับอักเสบบี (Viral hepatitis B)")
-        st.write("ผลตรวจ: N/A")
-    
-        st.markdown("---")
-        st.subheader("ผลการตรวจคลื่นไฟฟ้าหัวใจ (EKG)")
-        st.write("ผลตรวจ: N/A")
+    # ==============================
+    # 🚻 ผลตรวจปัสสาวะ (Urinalysis)
+    # ==============================
 
-    # ✅ กล่องใหม่ใต้คำแนะนำ: ปัสสาวะ + อุจจาระ + ผลตรวจเพิ่มเติม
-    col_main, col_side = st.columns([2.8, 1.2])
+    if selected_year == 68:
+        urine_config_68 = [
+            ("สี (Colour)", person.get("Color68", "N/A"), "Yellow, Pale Yellow"),
+            ("น้ำตาล (Sugar)", person.get("sugar68", "N/A"), "Negative"),
+            ("โปรตีน (Albumin)", person.get("Alb68", "N/A"), "Negative, trace"),
+            ("กรด-ด่าง (pH)", person.get("pH68", "N/A"), "5.0 - 8.0"),
+            ("ความถ่วงจำเพาะ (Sp.gr)", person.get("Spgr68", "N/A"), "1.003 - 1.030"),
+            ("เม็ดเลือดแดง (RBC)", person.get("RBC168", "N/A"), "0 - 2 cell/HPF"),
+            ("เม็ดเลือดขาว (WBC)", person.get("WBC168", "N/A"), "0 - 5 cell/HPF"),
+            ("เซลล์เยื่อบุผิว (Squam.epit.)", person.get("SQ-epi68", "N/A"), "0 - 10 cell/HPF"),
+            ("อื่นๆ", person.get("ORTER68", "N/A"), "-"),
+        ]
     
+        urine_rows = []
+        for name, value, normal in urine_config_68:
+            val_text, is_abn = flag_urine_value(value, normal)
+            urine_rows.append([(name, is_abn), (val_text, is_abn), (normal, is_abn)])
+
+        st.markdown(render_section_header("ผลการตรวจปัสสาวะ (Urinalysis)"), unsafe_allow_html=True)
+        st.markdown(styled_result_table(["ชื่อการตรวจ", "ผลตรวจ", "ค่าปกติ"], urine_rows), unsafe_allow_html=True)
+    
+    # ✅ สำหรับปีก่อน 68 → แสดงข้อความรวมในบรรทัดเดียว
+    else:
+        field_name = f"ผลปัสสาวะ{selected_year}"
+        urine_text = person.get(field_name, "").strip()
+    
+        st.markdown(render_section_header("ผลการตรวจปัสสาวะ (Urinalysis)"), unsafe_allow_html=True)
+        
+        if urine_text:
+            st.markdown(f"""
+            <div style='
+                margin-top: 1rem;
+                padding: 1rem;
+                border-left: 5px solid #4CAF50;
+                background-color: #f5f5f5;
+                font-size: 16px;
+                line-height: 1.7;
+            '>
+                {urine_text}
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style='
+                margin-top: 1rem;
+                padding: 1rem;
+                background-color: #f9f9f9;
+                font-size: 16px;
+                line-height: 1.7;
+            '>
+                ไม่พบข้อมูลผลตรวจปัสสาวะสำหรับปีนี้
+            </div>
+            """, unsafe_allow_html=True)
+
     # ===============================
     # 🚽 คำแนะนำผลตรวจปัสสาวะ (เฉพาะปีที่เลือก)
     # ===============================
@@ -998,3 +967,78 @@ if "person" in st.session_state:
     
         return "ควรตรวจปัสสาวะซ้ำเพื่อติดตามผล"
     
+    # ======================
+    # ✅ แสดงกล่องคำแนะนำ
+    # ======================
+    
+    y = selected_year
+    y_label = str(y)
+    sex = person.get("เพศ", "").strip()
+    
+    alb_raw = person.get(f"Alb{y_label}", "").strip()
+    sugar_raw = person.get(f"sugar{y_label}", "").strip()
+    rbc_raw = person.get(f"RBC1{y_label}", "").strip()
+    wbc_raw = person.get(f"WBC1{y_label}", "").strip()
+    
+    urine_advice = advice_urine(sex, alb_raw, sugar_raw, rbc_raw, wbc_raw)
+    
+    if urine_advice:
+        st.markdown(f"""
+        <div style='
+            background-color: rgba(255, 215, 0, 0.2);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 16px;
+        '>
+            <div style='font-size: 18px; font-weight: bold;'>📌 คำแนะนำจากผลตรวจปัสสาวะ ปี {2500 + y}</div>
+            <div style='margin-top: 0.5rem;'>{urine_advice}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ======================
+    # ผลอุจจาระ
+    # ======================
+
+    def interpret_stool_exam(value):
+        if not value or value.strip() == "":
+            return "-"
+        if "ปกติ" in value:
+            return "ปกติ"
+        elif "เม็ดเลือดแดง" in value:
+            return "พบเม็ดเลือดแดงในอุจจาระ นัดตรวจซ้ำ"
+        elif "เม็ดเลือดขาว" in value:
+            return "พบเม็ดเลือดขาวในอุจจาระ นัดตรวจซ้ำ"
+        return value.strip()
+    
+    def interpret_stool_cs(value):
+        if not value or value.strip() == "":
+            return "-"
+        if "ไม่พบ" in value or "ปกติ" in value:
+            return "ไม่พบการติดเชื้อ"
+        return "พบการติดเชื้อในอุจจาระ ให้พบแพทย์เพื่อตรวจรักษาเพิ่มเติม"
+
+    # ===============================
+    # 💩 DISPLAY: STOOL TEST BY YEAR
+    # ===============================
+    
+    # ดึงข้อมูลจากปีที่เลือก
+    y = selected_year
+    y_label = "" if y == 68 else str(y)
+    
+    stool_exam_raw = person.get(f"Stool exam{y_label}", "").strip()
+    stool_cs_raw = person.get(f"Stool C/S{y_label}", "").strip()
+    
+    exam_text = interpret_stool_exam(stool_exam_raw)
+    cs_text = interpret_stool_cs(stool_cs_raw)
+    
+    # แสดงหัวข้อสีเขียวเข้ม (แบบเดียวกับ render_section_header)
+    st.markdown(render_section_header("💩 ผลตรวจอุจจาระ (Stool Examination)"), unsafe_allow_html=True)
+    
+    # แสดงข้อความแปลผล
+    st.markdown(f"""
+    <p style='font-size: 16px; line-height: 1.7; margin-bottom: 2rem;'>
+        <b>ผลตรวจอุจจาระทั่วไป:</b> {exam_text}<br>
+        <b>ผลเพาะเชื้ออุจจาระ:</b> {cs_text}
+    </p>
+    """, unsafe_allow_html=True)
