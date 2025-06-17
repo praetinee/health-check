@@ -467,7 +467,26 @@ if "person" in st.session_state:
     # ===============================
     st.markdown("### 🚽 ผลตรวจปัสสาวะ")
     urine_df = pd.DataFrame.from_dict(urine_table, orient="index", columns=[y + 2500 for y in years])
-    st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
+    col_left, col_right = st.columns([3, 2])  # ปรับอัตราส่วนตามต้องการ
+    
+    with col_left:
+        st.markdown("### 🚽 ผลตรวจปัสสาวะ")
+        st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
+    
+    with col_right:
+        st.markdown("### 📝 คำแนะนำ")
+        st.markdown(f"""
+            <div style='
+                background-color: #e8f5e9;
+                padding: 1.2rem;
+                border-radius: 6px;
+                font-size: 16px;
+                line-height: 1.7;
+                color: #333;
+            '>
+                {advice_latest or "ไม่มีคำแนะนำเพิ่มเติม"}
+            </div>
+        """, unsafe_allow_html=True)
     
     # ===============================
     # แสดงคำแนะนำปี 68 หรือมากกว่า
