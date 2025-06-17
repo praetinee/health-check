@@ -1044,23 +1044,38 @@ if "person" in st.session_state:
     """, unsafe_allow_html=True)
 
     # ===============================
-    # DISPLAY: URINALYSIS (left) + XRAY & Virus & EKG (right)
+    # DISPLAY: XRAY & Virus & EKG (right)
     # ===============================
-    col1, col2 = st.columns([2, 2])  # ปรับความกว้างตามสัดส่วน
+    col1, col2 = st.columns([2, 2])
     
     with col1:
         st.markdown("### 🚽 ผลตรวจปัสสาวะ")
         st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
     
     with col2:
-        st.markdown("### 🩻 ผลตรวจเอกซเรย์ (Chest X-ray)")
-        st.markdown("N/A")
-    
-        st.markdown("### 🧪 ผลตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)")
-        st.markdown("N/A")
-    
-        st.markdown("### 🧪 ผลตรวจไวรัสตับอักเสบบี (Viral hepatitis B)")
-        st.markdown("N/A")
-    
-        st.markdown("### ❤️ ผลคลื่นไฟฟ้าหัวใจ (EKG)")
-        st.markdown("N/A")
+        st.markdown("""
+            <div style="background-color: #d0e9c6; padding: 1rem; border-radius: 6px;">
+                <h4 style="margin-top: 0;">ผลการตรวจเอกซเรย์ (Chest X-ray)</h4>
+                <p>{}</p>
+            </div>
+            <br>
+            <div style="background-color: #d0e9c6; padding: 1rem; border-radius: 6px;">
+                <h4 style="margin-top: 0;">ผลตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)</h4>
+                <p>{}</p>
+            </div>
+            <br>
+            <div style="background-color: #d0e9c6; padding: 1rem; border-radius: 6px;">
+                <h4 style="margin-top: 0;">ผลตรวจไวรัสตับอักเสบบี (Viral hepatitis B)</h4>
+                <p>{}</p>
+            </div>
+            <br>
+            <div style="background-color: #d0e9c6; padding: 1rem; border-radius: 6px;">
+                <h4 style="margin-top: 0;">ผลคลื่นไฟฟ้าหัวใจ (EKG)</h4>
+                <p>{}</p>
+            </div>
+        """.format(
+            person.get("CXR", "N/A"),
+            person.get("Viral hepatitis A", "N/A"),
+            person.get("Viral hepatitis B", "N/A"),
+            person.get("EKG", "N/A")
+        ), unsafe_allow_html=True)
