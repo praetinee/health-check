@@ -873,65 +873,67 @@ if "person" in st.session_state:
     
     st.markdown(centered_box, unsafe_allow_html=True)
 
+    # ✅ แสดงผล Urinalysis + Stool + X-ray & Hepatitis แบบสองคอลัมน์
+    st.markdown("## 📋 รายงานผลตรวจเพิ่มเติม")
+    
+    left_col, right_col = st.columns([2, 2])
+    
+    # ---- ซ้าย: ปัสสาวะ + อุจจาระ ----
+    with left_col:
+        st.subheader("ผลการตรวจปัสสาวะ (Urinalysis)")
+    
+        urinalysis_data = {
+            "สี (Colour)": "N/A",
+            "น้ำตาล (sugar)": "N/A",
+            "เม็ดเลือดขาว (Wbc/HPF)": "N/A",
+            "เม็ดเลือดแดง (Rbc/HPF)": "N/A",
+            "กรด-ด่าง (pH)": "N/A",
+            "โปรตีน (albumin)": "N/A",
+            "ความถ่วงจำเพาะ (Sp.gr)": "N/A",
+            "เซลล์เยื่อบุผิว (Squam.epit.)": "N/A"
+        }
+    
+        normal_ranges = {
+            "สี (Colour)": "Yellow, Pale Yellow",
+            "น้ำตาล (sugar)": "Negative",
+            "เม็ดเลือดขาว (Wbc/HPF)": "0–5 cell/HPF",
+            "เม็ดเลือดแดง (Rbc/HPF)": "0–2 cell/HPF",
+            "กรด-ด่าง (pH)": "5.0–8.0",
+            "โปรตีน (albumin)": "Negative, trace",
+            "ความถ่วงจำเพาะ (Sp.gr)": "1.003–1.030",
+            "เซลล์เยื่อบุผิว (Squam.epit.)": "0–10 cell/HPF"
+        }
+    
+        for item, result in urinalysis_data.items():
+            st.write(f"**{item}**: {result} (ปกติ: {normal_ranges[item]})")
+    
+        st.write("**สรุปผล:** -")
+        st.write("**คำแนะนำ:**")
+    
+        st.markdown("---")
+        st.subheader("ผลการตรวจอุจจาระ (Stool Exam)")
+        st.write("ผลตรวจ: N/A")
+    
+    # ---- ขวา: เอกซเรย์ + ไวรัส + EKG ----
+    with right_col:
+        st.subheader("ผลการตรวจเอกซเรย์ (Chest X-ray)")
+        st.write("ผลตรวจ: N/A")
+    
+        st.markdown("---")
+        st.subheader("ผลการตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)")
+        st.write("ผลตรวจ: N/A")
+    
+        st.markdown("---")
+        st.subheader("ผลการตรวจไวรัสตับอักเสบบี (Viral hepatitis B)")
+        st.write("ผลตรวจ: N/A")
+    
+        st.markdown("---")
+        st.subheader("ผลการตรวจคลื่นไฟฟ้าหัวใจ (EKG)")
+        st.write("ผลตรวจ: N/A")
+
     # ✅ กล่องใหม่ใต้คำแนะนำ: ปัสสาวะ + อุจจาระ + ผลตรวจเพิ่มเติม
     col_main, col_side = st.columns([2.8, 1.2])
     
-    with col_main:
-        # ✅ ตารางผลปัสสาวะ (Urinalysis)
-        st.markdown(render_section_header("ผลการตรวจปัสสาวะ (Urinalysis)"), unsafe_allow_html=True)
-    
-        urine_config = [
-            ("Color", "สีปัสสาวะ", "Yellow, Pale Yellow"),
-            ("Appearance", "ลักษณะ", "Clear"),
-            ("pH", "pH", "5.0 - 8.0"),
-            ("Specific gravity", "Specific gravity", "1.003 - 1.030"),
-            ("Protein", "Albumin", "Negative, trace"),
-            ("Glucose", "Sugar", "Negative"),
-            ("RBC", "RBC", "0 - 5 cell/HPF"),
-            ("WBC", "WBC", "0 - 5 cell/HPF"),
-        ]
-    
-        urine_rows = []
-        for col_en, label, normal in urine_config:
-            field = f"{col_en}{selected_year}"
-            raw = person.get(field, "-")
-            val, abn = flag_urine_value(raw, normal)
-            urine_rows.append([(label, abn), (val, abn), (normal, abn)])
-    
-        st.markdown(styled_result_table(["ชื่อการตรวจ", "ผลตรวจ", "ค่าปกติ"], urine_rows), unsafe_allow_html=True)
-    
-        # ✅ ตารางผลอุจจาระ (Stool Examination)
-        st.markdown(render_section_header("💩 ผลตรวจอุจจาระ (Stool Examination)"), unsafe_allow_html=True)
-    
-        exam_text = str(person.get(f"Stool Exam{selected_year}", "") or "").strip()
-        cs_text = str(person.get(f"Stool Culture{selected_year}", "") or "").strip()
-    
-        def interpret_stool_exam(exam, cs):
-            if not exam and not cs:
-                return "-"
-            if "ไม่มี" in exam and "ไม่มี" in cs:
-                return "ปกติ"
-            if any(w in exam for w in ["ไข่", "พยาธิ", "เม็ดเลือด", "แบคทีเรีย"]):
-                return "พบสิ่งแปลกปลอมในอุจจาระ"
-            if "เชื้อ" in cs:
-                return "อาจมีการติดเชื้อในลำไส้"
-            return "โปรดตรวจสอบเพิ่มเติม"
-    
-        stool_result = interpret_stool_exam(exam_text, cs_text)
-    
-        st.markdown(f"""
-            <div style="padding: 1rem; background-color: #f1f8e9; border-radius: 6px; font-size: 16px;">
-                <b>ผล Stool Exam:</b> {exam_text or '-'}<br>
-                <b>ผล Stool Culture:</b> {cs_text or '-'}<br>
-                <b>สรุป:</b> {stool_result}
-            </div>
-        """, unsafe_allow_html=True)
-    
-    with col_side:
-        st.markdown("<h4 style='margin-top:2rem;'>🩻 ผลการตรวจเพิ่มเติม</h4>", unsafe_allow_html=True)
-        st.markdown(render_additional_screening(), unsafe_allow_html=True)
-
-
     # ===============================
     # 🚽 คำแนะนำผลตรวจปัสสาวะ (เฉพาะปีที่เลือก)
     # ===============================
@@ -995,41 +997,4 @@ if "person" in st.session_state:
             return "อาจมีการอักเสบของระบบทางเดินปัสสาวะ แนะนำให้ตรวจซ้ำ"
     
         return "ควรตรวจปัสสาวะซ้ำเพื่อติดตามผล"
-    
-    def render_additional_screening():
-        screening_items = [
-            "ผลการตรวจเอกซเรย์ (Chest X-ray)",
-            "ผลการตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)",
-            "ผลการตรวจไวรัสตับอักเสบบี (Viral hepatitis B)",
-            "ผลการตรวจคลื่นไฟฟ้าหัวใจ (EKG)",
-        ]
-    
-        blocks = []
-        for title in screening_items:
-            block = f"""
-            <div style='
-                background-color: #A5D6A7;
-                padding: 20px;
-                margin: 10px 0;
-                border-radius: 8px;
-                font-size: 16px;
-                font-weight: bold;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            '>
-                <span>{title}</span>
-                <span style='font-weight: normal;'>N/A</span>
-            </div>
-            """
-            blocks.append(block)
-    
-        return "".join(blocks)
-    
-    ...
-    
-    if "person" in st.session_state:
-        person = st.session_state["person"]
-    
-        selected_year = st.selectbox(...)  # <-- ของเดิม
     
