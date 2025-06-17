@@ -1042,3 +1042,25 @@ if "person" in st.session_state:
         <b>ผลเพาะเชื้ออุจจาระ:</b> {cs_text}
     </p>
     """, unsafe_allow_html=True)
+
+    # ===============================
+    # DISPLAY: URINALYSIS (left) + XRAY & Virus & EKG (right)
+    # ===============================
+    col1, col2 = st.columns([2, 2])  # ปรับความกว้างตามสัดส่วน
+    
+    with col1:
+        st.markdown("### 🚽 ผลตรวจปัสสาวะ")
+        st.markdown(urine_df.to_html(escape=False), unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("### 🩻 ผลตรวจเอกซเรย์ (Chest X-ray)")
+        st.markdown("N/A")
+    
+        st.markdown("### 🧪 ผลตรวจไวรัสตับอักเสบเอ (Viral hepatitis A)")
+        st.markdown("N/A")
+    
+        st.markdown("### 🧪 ผลตรวจไวรัสตับอักเสบบี (Viral hepatitis B)")
+        st.markdown("N/A")
+    
+        st.markdown("### ❤️ ผลคลื่นไฟฟ้าหัวใจ (EKG)")
+        st.markdown("N/A")
